@@ -9,17 +9,23 @@ on:
 
 env:
   MONGO_URI: ‘mongodb+srv://supercluster.d83jj.mongodb.net/superData'
-  MONGO_USERNAME: 'superuser'
+  MONGO_USERNAME: superuser
   MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD  }}
     
 jobs:
-    unit-testing:
+    unit-testing:  
         name: Unit Testing
         runs-on: ubuntu-latest
+        
+        env:
+          MONGO_URI: ‘mongodb+srv://supercluster.d83jj.mongodb.net/superData'
+          MONGO_USERNAME: superuser
+          MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD  }}
+
         steps:
         - name: Checkout Repository
           uses: actions/checkout@v4
-
+          
         - name: Setup NodeJS Version
           uses: actions/setup-node@v3
           with:
