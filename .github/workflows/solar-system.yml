@@ -47,10 +47,10 @@ jobs:
         - name: Install Dependencies
           run: npm install
         - name: Run command
-          run: npm run code-coverage
+          run: npm run coverage
           continue-on-error: true
         - uses: actions/upload-artifact@v4
           with:
             name: Code-Coverage-Result
             path: coverage
-            retention-days: 7
+            retention-days: 5
