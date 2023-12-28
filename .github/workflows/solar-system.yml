@@ -71,6 +71,6 @@ jobs:
         - uses: docker/build-push-action@v4
           with:
             push: true
-            tags: ghcr.io/${{ github.actor }}/solar-system:${{ github.sha }}
+            tags: ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha }}
             
           
