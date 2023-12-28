@@ -68,7 +68,7 @@ jobs:
             registry: ghcr.io
             username: ${{ github.actor }}
             password: ${{ secrets.GITHUB_TOKEN }}
-        - uses: docker/build-push-action
+        - uses: docker/build-push-action@v4
           with:
             push: true
             tags: ghcr.io/${{ github.actor }}/solar-system:${{ GITHUB_SHA	 }}
