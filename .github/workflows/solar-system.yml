@@ -76,6 +76,6 @@ jobs:
           with:
             context: .
             push: true
-            tags: 'ghcr.io/krisharyan/solar-system:${{ github.sha }}'
+            tags: 'ghcr.io/${{ lowercase(github.repository_owner) }}/solar-system:${{ github.sha }}'
             
           
