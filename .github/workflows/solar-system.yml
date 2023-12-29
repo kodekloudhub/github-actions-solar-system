@@ -72,10 +72,17 @@ jobs:
             registry: ghcr.io
             username: ${{ github.actor }}
             password: ${{ secrets.GITHUB_TOKEN }}
+        
+        - id: string
+          uses: ASzc/change-string-case-action@v1
+          with:
+            string: ${{ github.repository }}
+        # - run: |
+        #     echo "${{ steps.string.outputs.lowercase }}"
         - uses: docker/build-push-action@v4
           with:
             context: .
             push: true
-            tags: 'ghcr.io/${{ lowercase(github.repository_owner) }}/solar-system:${{ github.sha }}'
+            tags: 'ghcr.io/${{ steps.string.outputs.lowercase }}/solar-system:${{ github.sha }}'
             
           
