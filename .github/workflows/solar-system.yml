@@ -76,7 +76,7 @@ jobs:
         - id: string
           uses: ASzc/change-string-case-action@v1
           with:
-            string: ${{ github.repository }}
+            string: ${{ github.repository_owner }}
         # - run: |
         #     echo "${{ steps.string.outputs.lowercase }}"
         - uses: docker/build-push-action@v4
