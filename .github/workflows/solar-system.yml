@@ -52,7 +52,7 @@ jobs:
       - name: Install Dependencies
         run: npm install
   
-      - name: code-coverage
+      - name: code coverage
         run: npm run code-coverage
         continue-on-error: true
         
