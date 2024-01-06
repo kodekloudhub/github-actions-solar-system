@@ -1,0 +1,30 @@
+name: test by marker name
+
+on:
+  workflow_dispatch:
+    inputs:
+      marker:
+        description: Enter the marker name
+        required: true
+        default: ""
+      runenv:
+        description: Select the env to run
+        required: true
+        default: dev
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+
+env:
+  MAXFAIL: 5
+  RETENTION_DAYS: 7
+
+jobs:
+  test-by-marker:
+    if: ${{ inputs.marker }} != ""
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checking input
+        run: echo env is ${{ inputs.runenv }} and marker is ${{ inputs.marker }}
