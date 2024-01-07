@@ -40,7 +40,18 @@ jobs:
     code-coverage:
         name: Code Coverage
         runs-on: ubuntu-latest
-        steps:      
+        steps:  
+        - name: Checkout Repository
+          uses: actions/checkout@v4
+
+        - name: Setup NodeJS Version
+          uses: actions/setup-node@v3
+          with:
+            node-version: 20
+  
+        - name: Install Dependencies
+          run: npm install
+
         - name: Code Coverage
           run: npm run code-coverage
 
