@@ -45,6 +45,7 @@ jobs:
           run: npm run code-coverage
 
         - name: Archive Code Coverage Results
+          if: always()
           uses: actions/upload-artifact@v3
           with:
             name: Code-Coverage-Result
