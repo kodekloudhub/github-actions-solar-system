@@ -46,7 +46,7 @@ jobs:
               node-version: 20
           - run: npm install
           - continue-on-error: true
-            run: npm run code-coverage
+            run: npm run coverage
           - uses: actions/upload-artifact@v3
             with:
               name: Code-Coverage-Result
