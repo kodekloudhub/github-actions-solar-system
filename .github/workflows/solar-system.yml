@@ -71,6 +71,8 @@ jobs:
       needs: 
         - unit-testing
         - code-coverage
+      # permissions:  ===> needed if the default github token does not have write permissions
+      #   packages: write
       runs-on: ubuntu-latest
       steps:
         - name: Checkout
