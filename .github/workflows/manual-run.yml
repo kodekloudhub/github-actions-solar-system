@@ -31,7 +31,9 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v3
       - name: Load environment variables
-        run: export $(dotenv < $TESTING_VARS)
+        run: |
+          cat $TESTING_VARS 
+          cat $TESTING_VARS >> .env
       - name: Job-1 test
         if: ${{ github.event.inputs.test-name == 'job-1' }}
         run: echo ${{ inputs.test-name }} on ${{ inputs.runenv }} accessing $AGE $RETENTION_DAYS
