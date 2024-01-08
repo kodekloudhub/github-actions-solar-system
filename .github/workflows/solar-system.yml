@@ -67,7 +67,9 @@ jobs:
 
     docker:
       name: Containerization
-      needs: [unit-testing, code-coverage]
+      needs: 
+        - unit-testing
+        - code-coverage
       runs-on: ubuntu-latest
       steps:
         - name: Checkout
@@ -78,4 +80,3 @@ jobs:
           with:
             username: ${{ vars.DOCKERHUB_USERNAME }}
             password: ${{ secrets.DOCKERHUB_PASSWORD }}
-            
