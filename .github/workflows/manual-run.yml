@@ -7,6 +7,7 @@ on:
         description: Select the test name
         required: true
         default: ""
+        type: choice
         option:
           - job-1
           - job-2
