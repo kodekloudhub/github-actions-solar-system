@@ -22,7 +22,7 @@ on:
           - prod
 
 env:
-  TESTING_VARS: ./.github/workflows/env-vars
+  TESTING_VARS: .github/workflows/env-vars
 
 jobs:
   test-job:
