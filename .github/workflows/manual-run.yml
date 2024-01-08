@@ -33,8 +33,7 @@ jobs:
       - name: Load environment variables
         run: |
           cat $TESTING_VARS 
-          source $TESTING_VARS
-          echo $?
+          source "$TESTING_VARS"
       - name: Job-1 test
         if: ${{ github.event.inputs.test-name == 'job-1' }}
         run: echo ${{ inputs.test-name }} on ${{ inputs.runenv }} accessing $AGE $RETENTION_DAYS
