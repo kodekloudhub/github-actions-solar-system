@@ -3,6 +3,14 @@ name: test by marker name
 on:
   workflow_dispatch:
     inputs:
+      test-name:
+        description: Select the test name
+        required: true
+        default: ""
+        option:
+          - job-1
+          - job-2
+          - job-3
       runenv:
         description: Select the env to run
         required: true
@@ -18,18 +26,15 @@ env:
   RETENTION_DAYS: 7
 
 jobs:
-  job-1:
+  test-job:
     runs-on: ubuntu-latest
     steps:
-      - name: Checking input
-        run: job 1 on ${{ inputs.runenv }} 
-  job-2:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checking input
-        run: job 2 on ${{ inputs.runenv }} 
-  job-3:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checking input
-        run: job 3 on ${{ inputs.runenv }} 
+      - name: Job-1 test
+        if: ${{ inputs.test-name }} == "job-1"
+        run: echo ${{ inputs.test-name }} on ${{ inputs.runenv }} 
+      - name: Job-2 test
+        if: ${{ inputs.test-name }} == "job-2"
+        run: echo ${{ inputs.test-name }} on ${{ inputs.runenv }} 
+      - name: Job-3 test
+        if: ${{ inputs.test-name }} == "job-3"
+        run: echo ${{ inputs.test-name }} on ${{ inputs.runenv }} 
