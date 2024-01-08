@@ -6,9 +6,9 @@ on:
       test-name:
         description: Select the test name
         required: true
+        default: ""
         type: choice
-        default: job1
-        option:
+        options:
           - job1
           - job2
           - job3
