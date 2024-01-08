@@ -38,3 +38,6 @@ jobs:
       - name: Job-3 test
         if: ${{ github.event.inputs.test-name == 'job-3' }}
         run: echo ${{ inputs.test-name }} on ${{ inputs.runenv }} 
+      - name: Save Report Artifacts
+        if: always()
+        run: echo Reports saved
