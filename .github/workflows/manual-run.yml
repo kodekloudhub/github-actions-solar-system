@@ -22,12 +22,14 @@ on:
           - prod
 
 env:
-  TESTING_VARS: ./.github/workflows/env-vars
+  TESTING_VARS: .github/workflows/env-vars
 
 jobs:
   test-job:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout branch
+        uses: actions/checkout@v3
       - name: Source Env file
         run: source $TESTING_VARS
       - name: Job-1 test
