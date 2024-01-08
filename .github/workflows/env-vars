@@ -1,4 +1,4 @@
-name="hello"
-age=5
+NAME="hello"
+AGE=5
 MAXFAIL=5
 RETENTION_DAYS=7

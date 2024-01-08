@@ -31,10 +31,10 @@ jobs:
       - name: Checkout branch
         uses: actions/checkout@v3
       - name: Source Env file
-        run: source $TESTING_VARS
+        run: source ${{ env.TESTING_VARS }}
       - name: Job-1 test
         if: ${{ github.event.inputs.test-name == 'job-1' }}
-        run: echo ${{ inputs.test-name }} on ${{ inputs.runenv }} accessing $name $RETENTION_DAYS
+        run: echo ${{ inputs.test-name }} on ${{ inputs.runenv }} accessing $AGE $RETENTION_DAYS
       - name: Job-2 test
         if: ${{ github.event.inputs.test-name == 'job-2' }}
         run: echo ${{ inputs.test-name }} on ${{ inputs.runenv }} 
