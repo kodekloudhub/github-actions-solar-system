@@ -6,7 +6,6 @@ on:
       test-name:
         description: Select the test name
         required: true
-        default: ""
         type: choice
         options:
           - job1
@@ -31,11 +30,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Job-1 test
-        if: ${{ inputs.test-name }} == "job1"
+        if: ${{ github.event.inputs.test-name == 'job1' }}
         run: echo ${{ inputs.test-name }} on ${{ inputs.runenv }} 
       - name: Job-2 test
-        if: ${{ inputs.test-name }} == "job2"
+        if: ${{ github.event.inputs.test-name == 'job2' }}
         run: echo ${{ inputs.test-name }} on ${{ inputs.runenv }} 
       - name: Job-3 test
-        if: ${{ inputs.test-name }} == "job3"
+        if: ${{ github.event.inputs.test-name == 'job3' }}
         run: echo ${{ inputs.test-name }} on ${{ inputs.runenv }} 
