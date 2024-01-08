@@ -22,16 +22,17 @@ on:
           - prod
 
 env:
-  MAXFAIL: 5
-  RETENTION_DAYS: 7
-
+  TESTING-VARS: ./.github/workflows/env-vars
+  
 jobs:
   test-job:
     runs-on: ubuntu-latest
     steps:
+      - name: Source Env file
+        run: source $TESTING-VARS
       - name: Job-1 test
         if: ${{ github.event.inputs.test-name == 'job-1' }}
-        run: echo ${{ inputs.test-name }} on ${{ inputs.runenv }} 
+        run: echo ${{ inputs.test-name }} on ${{ inputs.runenv }} accessing $name $RETENTION_DAYS
       - name: Job-2 test
         if: ${{ github.event.inputs.test-name == 'job-2' }}
         run: echo ${{ inputs.test-name }} on ${{ inputs.runenv }} 
