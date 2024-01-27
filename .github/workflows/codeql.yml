@@ -1,0 +1,25 @@
+name: CodeQL analysis
+
+on:
+  workflow_dispatch: 
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+
+      - name: Analyze code with CodeQL
+        uses: github/codeql-action/analyze@v2
+
+      # - name: Upload CodeQL analysis results
+      #   uses: github/codeql-action/upload@v2
