@@ -12,8 +12,8 @@ jobs:
         name: Unit Testing
         runs-on: ubuntu-latest
         env:
-          MONGO_URI: ${{ vars.MONGO_URI }}
-          MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
+          MONGO_URI: mongodb+srv://supercluster.d83jj.mongodb.net/superData
+          MONGO_USERNAME: superuser
           MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
         steps:
         - name: Checkout Repository
