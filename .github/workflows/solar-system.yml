@@ -35,6 +35,7 @@ jobs:
           uses: actions/upload-artifact@v3
           with:
             name: Mocha-Test-Result
+            path: test-results.xml
     code-coverage:
       runs-on: ubuntu-latest
       steps:
@@ -52,4 +53,4 @@ jobs:
             retention-days: 5
           
         
-            path: test-results.xml
+
