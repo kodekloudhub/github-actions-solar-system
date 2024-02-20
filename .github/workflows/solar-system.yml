@@ -11,7 +11,7 @@ env:
   MONGO_URI: ‘mongodb+srv://supercluster.d83jj.mongodb.net/superData'
   MONGO_USERNAME: superuser
   MONGO_PASSWORD: ${{ secrets.MongoPassword }}
-  
+
 jobs:
     unit-testing:
         name: Unit Testing
@@ -26,7 +26,9 @@ jobs:
             node-version: 20
     
         - name: Install Dependencies
-          run: npm install
+          run: |
+            npm install
+            echo $MONGO_URI $MONGO_USERNAME $MONGO_PASSWORD
     
         - name: Unit Testing
           run: npm test
