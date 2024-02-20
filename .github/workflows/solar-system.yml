@@ -39,3 +39,31 @@ jobs:
           with:
             name: Mocha-Test-Result
             path: test-results.xml
+    
+    code-coverage:
+      name: Code Coverage
+      runs-on: ubuntu-latest
+      steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup NodeJS Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+  
+      - name: Install Dependencies
+        run: |
+          npm install
+          echo $MONGO_URI $MONGO_USERNAME $MONGO_PASSWORD
+  
+      - name: Code Coverage
+        run: npm run code-coverage
+        
+      - name: Archive Test Result
+        uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          name: Code-Coverage-Result
+          path: coverage
+          retention-days: 5
