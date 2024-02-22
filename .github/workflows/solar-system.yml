@@ -42,7 +42,12 @@ jobs:
         - name: Checkout Repository
           uses: actions/checkout@v4
         - name: Setup NodeJS
-          uses: actions/setup-node
+          uses: actions/setup-node@v3
+        - name: Cache NPM dependencies
+          uses: actions/cache@v3
+          with:
+           path: ~/.npm
+           key: '${{ runner.os }}-node-modules-${{ hashFiles(''package-lock.json'') }}'
         - name: Install NodeJS dependencies
           run: npm install
         - name: Code-Coverage
