@@ -6,7 +6,10 @@ on:
     branches:
       - main
       - 'feature/*'
-    
+env:
+  MONGO_URI: 'mongodb+srv://supercluster.d83jj.mongodb.net/superData'
+  MONGO_USERNAME: superuser
+  MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
 jobs:
     unit-testing:
         name: Unit Testing
@@ -31,3 +34,28 @@ jobs:
           with:
             name: Mocha-Test-Result
             path: test-results.xml
+    
+    code-coverage:
+        name: code coverage
+        runs-on: ubuntu-latest
+        steps:
+        - name: Checkout Repository
+          uses: actions/checkout@v4
+        - name: Setup NodeJS
+          uses: actions/setup-node@v3
+        - name: Cache NPM dependencies
+          uses: actions/cache@v3
+          with:
+           path: ~/.npm
+           key: '${{ runner.os }}-node-modules-${{ hashFiles(''package-lock.json'') }}'
+        - name: Install NodeJS dependencies
+          run: npm install
+        - name: Code-Coverage
+          continue-on-error: true 
+          run: npm run code-coverage
+        - name: Code-Coverage-Result
+          uses: actions/upload-artifact@v3
+          with:
+            name: Code-Coverage-Result
+            path: coverage
+            retention-days: 5
