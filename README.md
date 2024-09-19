@@ -53,3 +53,5 @@ services:
       MONGO_USERNAME: non-prod-user
       MONGO_PASSWORD: non-prod-password
 ```
+
+### By updating the workflow using job and service containers, the load on the production database has been reduced
