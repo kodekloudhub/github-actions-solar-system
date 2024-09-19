@@ -54,15 +54,29 @@ jobs:
   
   code-coverage:
     name: Coverage Testing
+    # Two containers (from container and from service) [Container to container communication -> No need for port mapping]
+    container: 
+      image: node:18
+    services:
+      mongo-db:
+        image: siddharth67/mongo-db:non-prod # Whatever image you have already built to run tests ...credentials:
+        options: 
+          --name mongo
+    env: # Here is the credentials to access the service container
+      MONGO_URI: 'mongodb://mongo:27017/superData'
+      MONGO_USERNAME: non-prod-user
+      MONGO_PASSWORD: non-prod-password
+
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup NodeJS Version
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
+        # *** We are setting up node:18 container so no need ti install it again
+      # - name: Setup NodeJS Version
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: 18
 
       - name: Caching NPM dependencies
         uses: actions/cache@v4

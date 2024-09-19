@@ -20,3 +20,36 @@
 
 ### About service containers
 You can use service containers to connect databases, web services, memory caches, and other tools to your workflow.
+
+```bash
+services:
+      mongo-db:
+        image: siddharth67/mongo-db:non-prod # Whatever image you have already built to run tests ...credentials:
+        ports:
+          - 27017:27017
+    env: # Here is the credentials to access the service container
+      MONGO_URI: 'mongodb://localhost:27017/superData'
+      MONGO_USERNAME: non-prod-user
+      MONGO_PASSWORD: non-prod-password
+    steps:
+      - name: Unit Testing
+        run: npm test
+```
+
+- Now the npm test is using the service container as a database
+![service-container](ReadmeImages/service-container.png)
+
+```bash
+  # Two containers (from container and from service) [Container to container communication -> No need for port mapping]
+    container: 
+      image: node:18
+    services:
+      mongo-db:
+        image: siddharth67/mongo-db:non-prod # Whatever image you have already built to run tests ...credentials:
+        options: 
+          --name mongo
+    env: # Here is the credentials to access the service container (As we can see we used the name instead of the port number)
+      MONGO_URI: 'mongodb://mongo:27017/superData'
+      MONGO_USERNAME: non-prod-user
+      MONGO_PASSWORD: non-prod-password
+```
