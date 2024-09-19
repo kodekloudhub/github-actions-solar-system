@@ -8,3 +8,6 @@
 
 - Cache found successfully :
 ![cache-ok](ReadmeImages/cache-ok.png)
+
+### GHCR 
+- GITHUB_TOKEN is automatically generated in the secrets (no need to manually put it) => secrets.GITHUB_TOKEN
