@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       mongo-db:
-        image: siddhart67/mongo-db:non-prod # Whatever image you have already built to run tests ...credentials:
+        image: siddharth67/mongo-db:non-prod # Whatever image you have already built to run tests ...credentials:
         ports:
           - 27017:27017
     env: # Here is the credentials to access the service container
