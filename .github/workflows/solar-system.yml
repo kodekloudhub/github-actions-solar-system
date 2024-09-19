@@ -88,3 +88,10 @@ jobs:
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker Build For Testing
+        uses: docker/build-push-action@v6
+        with:
+          context: . # Search for a Dockerfile on the root directory
+          push: false
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/solar-system:${{ github.sha }}
