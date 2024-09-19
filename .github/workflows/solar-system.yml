@@ -18,14 +18,24 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
       - name: Setup NodeJS Version
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
+
+      - name: Caching NPM dependencies
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+
       - name: Install Dependencies
         run: npm install
+
       - name: Unit Testing
         run: npm test
+
       - name: Archive Test Result
         if: always()
         uses: actions/upload-artifact@v4
@@ -44,6 +54,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+
+      - name: Caching NPM dependencies
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
 
       - name: Install Dependencies
         run: npm install
