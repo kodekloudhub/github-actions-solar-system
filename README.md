@@ -1,49 +1,57 @@
 # Solar System NodeJS Application
+## Using cache
+- First time running cache :
+![first-cache](ReadmeImages/first-cache.png)
 
-A simple HTML+MongoDB+NodeJS project to display Solar System and it's planets.
+- Cache craeted : 
+![cache-created](ReadmeImages/cache-created.png)
 
----
-## Requirements
+- Cache found successfully :
+![cache-ok](ReadmeImages/cache-ok.png)
 
-For development, you will only need Node.js and NPM installed in your environement.
+### GHCR 
+- GITHUB_TOKEN is automatically generated in the secrets (no need to manually put it) => secrets.GITHUB_TOKEN
+- When creating a package on ghcr using docker further permissions can be demanded ``` permissions: packages: write ```
 
-### Node
-- #### Node installation on Windows
+### Some best practices (Alice saw that the data base was more adn more sluggish)
+- Database more sluggish beceause we are suing the production database with github actions and tests
+- We do not use productiondatabase for testing or code coverage puposes.
+=> **Solution :** Service Containers (ithub actions container to mock the database)
 
-  Just go on [official Node.js website](https://nodejs.org/) and download the installer.
-Also, be sure to have `git` available in your PATH, `npm` might need it (You can find git [here](https://git-scm.com/)).
+### About service containers
+You can use service containers to connect databases, web services, memory caches, and other tools to your workflow.
 
-- #### Node installation on Ubuntu
+```bash
+services:
+      mongo-db:
+        image: siddharth67/mongo-db:non-prod # Whatever image you have already built to run tests ...credentials:
+        ports:
+          - 27017:27017
+    env: # Here is the credentials to access the service container
+      MONGO_URI: 'mongodb://localhost:27017/superData'
+      MONGO_USERNAME: non-prod-user
+      MONGO_PASSWORD: non-prod-password
+    steps:
+      - name: Unit Testing
+        run: npm test
+```
 
-  You can install nodejs and npm easily with apt install, just run the following commands.
+- Now the npm test is using the service container as a database
+![service-container](ReadmeImages/service-container.png)
 
-      $ sudo apt install nodejs
-      $ sudo apt install npm
+```bash
+  # Two containers (from container and from service) [Container to container communication -> No need for port mapping]
+    container: 
+      image: node:18
+    services:
+      mongo-db:
+        image: siddharth67/mongo-db:non-prod # Whatever image you have already built to run tests ...credentials:
+        options: 
+          --name mongo
+    env: # Here is the credentials to access the service container (As we can see we used the name instead of the port number)
+      MONGO_URI: 'mongodb://mongo:27017/superData'
+      MONGO_USERNAME: non-prod-user
+      MONGO_PASSWORD: non-prod-password
+```
 
-- #### Other Operating Systems
-  You can find more information about the installation on the [official Node.js website](https://nodejs.org/) and the [official NPM website](https://npmjs.org/).
-
-If the installation was successful, you should be able to run the following command.
-
-    $ node --version
-    v8.11.3
-
-    $ npm --version
-    6.1.0
-
----
-## Install Dependencies from `package.json`
-    $ npm install
-
-## Run Unit Testing
-    $ npm test
-
-## Run Code Coverage
-    $ npm run coverage
-
-## Run Application
-    $ npm start
-
-## Access Application on Browser
-    http://localhost:3000/
-
+### By updating the workflow using job and service containers, the load on the production database has been reduced

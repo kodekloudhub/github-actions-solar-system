@@ -6,28 +6,150 @@ on:
     branches:
       - main
       - 'feature/*'
-    
-jobs:
-    unit-testing:
-        name: Unit Testing
-        runs-on: ubuntu-latest
-        steps:
-        - name: Checkout Repository
-          uses: actions/checkout@v4
+env:
+  MONGO_URI: 'mongodb+srv://supercluster.d83jj.mongodb.net/superData'
+  MONGO_USERNAME: superuser
+  MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
 
-        - name: Setup NodeJS Version
-          uses: actions/setup-node@v3
-          with:
-            node-version: 20
-    
-        - name: Install Dependencies
-          run: npm install
-    
-        - name: Unit Testing
-          run: npm test
+jobs:
+  unit-testing:
+    name: Unit Testing
+    runs-on: ubuntu-latest
+    services:
+      mongo-db:
+        image: siddharth67/mongo-db:non-prod # Whatever image you have already built to run tests ...credentials:
+        ports:
+          - 27017:27017
+    env: # Here is the credentials to access the service container
+      MONGO_URI: 'mongodb://localhost:27017/superData'
+      MONGO_USERNAME: non-prod-user
+      MONGO_PASSWORD: non-prod-password
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup NodeJS Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Caching NPM dependencies
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Unit Testing
+        run: npm test
+
+      - name: Archive Test Result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mocha-Test-Result
+          path: test-results.xml
+  
+  code-coverage:
+    name: Coverage Testing
+    # Two containers (from container and from service) [Container to container communication -> No need for port mapping]
+    container: 
+      image: node:18
+    services:
+      mongo-db:
+        image: siddharth67/mongo-db:non-prod # Whatever image you have already built to run tests ...credentials:
+        options: 
+          --name mongo
+    env: # Here is the credentials to access the service container
+      MONGO_URI: 'mongodb://mongo:27017/superData'
+      MONGO_USERNAME: non-prod-user
+      MONGO_PASSWORD: non-prod-password
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+        # *** We are setting up node:18 container so no need ti install it again
+      # - name: Setup NodeJS Version
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: 18
+
+      - name: Caching NPM dependencies
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Coverage Testing
+        run: npm run coverage
+
+      - name: Archive Coverage Result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Code-Coverage-Result
+          path: coverage
+          retention-days: 5
+
+  
+  docker:
+    name: Containerization
+    needs: [unit-testing, code-coverage]
+    permissions:
+      packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker Build For Testing
+        uses: docker/build-push-action@v6
+        with:
+          context: . # Search for a Dockerfile on the root directory
+          push: false
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/solar-system:${{ github.sha }}
           
-        - name: Archive Test Result
-          uses: actions/upload-artifact@v3
-          with:
-            name: Mocha-Test-Result
-            path: test-results.xml
+      - name: Docker Image Test
+        run: |
+          docker images
+          docker run --name solar-system-app -d \
+          -p 3000:3000 \
+          -e MONGO_URI=$MONGO_URI \
+          -e MONGO_USERNAME=$MONGO_USERNAME \
+          -e MONGO_PASSWORD=$MONGO_PASSWORD \
+          ${{ vars.DOCKERHUB_USERNAME }}/solar-system:${{ github.sha }}
+            
+          export IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' solar-system-app)
+          echo $IP
+            
+          echo Testing Image URL using wget
+          wget -q -O - 127.0.0.1:3000/live | grep live
+            
+      - name: Container Registry Push
+        uses: docker/build-push-action@v6
+        with:
+          context: . # Search for a Dockerfile on the root directory
+          push: true
+          tags: |
+            ${{ vars.DOCKERHUB_USERNAME }}/solar-system:${{ github.sha }}
+            ghcr.io/ala-younes/solar-system:${{ github.sha }}
