@@ -21,14 +21,41 @@ jobs:
       - name: Setup NodeJS Version
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 18
       - name: Install Dependencies
         run: npm install
       - name: Unit Testing
         run: npm test
       - name: Archive Test Result
-        if: always() #added
-        uses: actions/upload-artifact@v3
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: Mocha-Test-Result
           path: test-results.xml
+  
+  code-coverage:
+    name: Coverage Testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup NodeJS Version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Coverage Testing
+        run: npm run coverage
+
+      - name: Archive Coverage Result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Code-Coverage-Result
+          path: coverage
+          retention-days: 5
+
