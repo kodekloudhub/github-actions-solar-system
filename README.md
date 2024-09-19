@@ -11,3 +11,4 @@
 
 ### GHCR 
 - GITHUB_TOKEN is automatically generated in the secrets (no need to manually put it) => secrets.GITHUB_TOKEN
+- When creating a package on ghcr using docker further permissions can be demanded ``` permissions: packages: write ```
