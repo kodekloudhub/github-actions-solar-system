@@ -12,3 +12,8 @@
 ### GHCR 
 - GITHUB_TOKEN is automatically generated in the secrets (no need to manually put it) => secrets.GITHUB_TOKEN
 - When creating a package on ghcr using docker further permissions can be demanded ``` permissions: packages: write ```
+
+### Some best practices (Alice saw that the data base was more adn more sluggish)
+- Database more sluggish beceause we are suing the production database with github actions and tests
+- We do not use productiondatabase for testing or code coverage puposes.
+=> **Solution :** Service Containers (ithub actions container to mock the database)
