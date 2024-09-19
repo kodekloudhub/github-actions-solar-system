@@ -32,3 +32,22 @@ jobs:
           with:
             name: Mocha-Test-Result
             path: test-results.xml        
+
+    code-coverage:
+        name: code-coverage
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout Repository
+            uses: actions/checkout@v4
+
+          - name: Setup NodeJS Version
+            uses: actions/setup-node@v3
+            with:
+              node-version: 18
+
+          - name: Code-coverage
+            run: npm run code-coverage
+        
+          - name: Archive Test Results
+            if: always()
+            uses: actions/upload-artifact@v4
