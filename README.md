@@ -17,3 +17,6 @@
 - Database more sluggish beceause we are suing the production database with github actions and tests
 - We do not use productiondatabase for testing or code coverage puposes.
 => **Solution :** Service Containers (ithub actions container to mock the database)
+
+### About service containers
+You can use service containers to connect databases, web services, memory caches, and other tools to your workflow.
