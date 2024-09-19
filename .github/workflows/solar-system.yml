@@ -45,6 +45,9 @@ jobs:
             with:
               node-version: 18
 
+          - name: install dependencies
+            run: npm install    
+
           - name: Code-coverage
             continue-on-error: true
             run: npm run code-coverage
