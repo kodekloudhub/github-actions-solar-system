@@ -154,6 +154,7 @@ jobs:
             ghcr.io/ala-younes/solar-system:${{ github.sha }}
 
   dev-deploy:
+    if: contains(github.ref, 'feature/')
     needs: [docker]
     runs-on: ubuntu-latest
     environment: 
@@ -236,7 +237,8 @@ jobs:
         run: minikube delete
 
   prod-deploy:
-    needs: [dev-deploy]
+    if: github.ref == 'refs/heads/main'
+    needs: [docker]
     runs-on: ubuntu-latest
     environment: 
       name: production 
