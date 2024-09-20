@@ -55,3 +55,7 @@ services:
 ```
 
 ### By updating the workflow using job and service containers, the load on the production database has been reduced
+
+# Kubernetes
+- By default kubectl needs a kubeconfig file in order to run. 
+- A **Kubeconfig** is a YAML file with all the Kubernetes cluster details, certificates, and secret tokens to authenticate the cluster. You might get this config file directly from the **cluster administrator** or from a **cloud platform** if you are using a managed Kubernetes cluster.

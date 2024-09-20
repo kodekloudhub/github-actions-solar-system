@@ -160,13 +160,30 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Install Minikube
+        run: |
+          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+          sudo install minikube-linux-amd64 /usr/local/bin/minikube
+
+      - name: Start Minikube
+        run: minikube start
+
       - name: Intall Kubectl CLI
         uses: azure/setup-kubectl@v4
         with:
           version: 'v1.26.0' 
-
-      - name: Fetch Kubernetes Cluster Details
+            
+      - name: Configure Kubectl
+        run: |
+          minikube kubectl -- config view --flatten --minify > minikube-kubeconfig.yaml
+          echo "KUBECONFIG=minikube-kubeconfig.yaml" >> $GITHUB_ENV
+  
+      - name: Verify Kubernetes Connection
         run: |
           kubectl version --short -o yaml
           echo ------------------------------------
           kubectl get nodes
+
+      - name: Clean up
+        if: always()
+        run: minikube delete
