@@ -172,7 +172,7 @@ jobs:
         uses: azure/setup-kubectl@v4
         with:
           version: 'v1.26.0' 
-            
+
       - name: Configure Kubectl
         run: |
           minikube kubectl -- config view --flatten --minify > minikube-kubeconfig.yaml
@@ -183,6 +183,19 @@ jobs:
           kubectl version --short -o yaml
           echo ------------------------------------
           kubectl get nodes
+          echo EXTERNAL-IP : 
+          kubectl -n ingress-nginx get svc ingress-nginx-controller
+
+      - name: Replace Token In Manifest Files
+        uses: cschleiden/replace-tokens@v1
+        with:
+          tokenPrefix: '_{_'
+          tokenSuffix: '_}_'
+          files: '["kubernetes/development/*.yaml"]'
+        env:
+          NAMESPACE: ${{ vars.NAMESPACE }}
+          REPLICAS: ${{ vars.REPLICAS }}
+          IMAGE: ${{ env.DOCKERHUB_USERNAME }}/solar-system:${{ github.sha }}
 
       - name: Clean up
         if: always()
