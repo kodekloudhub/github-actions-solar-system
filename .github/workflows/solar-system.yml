@@ -183,7 +183,9 @@ jobs:
           kubectl version --short -o yaml
           echo ------------------------------------
           kubectl get nodes
-          echo EXTERNAL-IP : 
+             
+      - name: Save an envi Var 
+        run: echo "SAVED_ENV=localhost" >> $GITHUB_ENV
 
       - name: Replace Token In Manifest Files
         uses: cschleiden/replace-tokens@v1
@@ -195,7 +197,7 @@ jobs:
           NAMESPACE: ${{ vars.NAMESPACE }}
           REPLICAS: ${{ vars.REPLICAS }}
           IMAGE: ${{ env.DOCKERHUB_USERNAME }}/solar-system:${{ github.sha }}
-          INGRESS_IP: 127.0.0.1
+          INGRESS_IP: ${{ env.SAVED_ENV }}
         
       - name: Check Files
         run: |
