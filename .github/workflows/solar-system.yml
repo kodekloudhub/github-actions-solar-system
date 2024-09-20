@@ -234,3 +234,15 @@ jobs:
       - name: Clean up
         if: always()
         run: minikube delete
+
+  prod-deploy:
+    needs: [dev-deploy]
+    runs-on: ubuntu-latest
+    environment: 
+      name: production 
+      url: https://www.linkedin.com/in/ala-younes/
+
+    steps:
+    - name: Echoing
+      run: |
+        echo production .........
