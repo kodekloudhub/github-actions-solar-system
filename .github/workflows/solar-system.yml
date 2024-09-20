@@ -224,6 +224,10 @@ jobs:
           MONGO_USERNAME: superuser
           KUBECONFIG: minikube-kubeconfig.yaml
 
+      - name: Testing endpoitn
+        run: |
+          echo development getting ingress
+          kubectl -n development get ing
       - name: Clean up
         if: always()
         run: minikube delete
