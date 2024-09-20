@@ -201,7 +201,7 @@ jobs:
         
       - name: Check Files
         run: |
-          cat kubernetes/developemnt/*.yaml
+          cat kubernetes/development/*.yaml
 
       - name: Clean up
         if: always()
