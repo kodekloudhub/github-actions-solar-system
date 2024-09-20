@@ -97,7 +97,6 @@ jobs:
           name: Code-Coverage-Result
           path: coverage
           retention-days: 5
-
   
   docker:
     name: Containerization
@@ -153,3 +152,21 @@ jobs:
           tags: |
             ${{ vars.DOCKERHUB_USERNAME }}/solar-system:${{ github.sha }}
             ghcr.io/ala-younes/solar-system:${{ github.sha }}
+
+  dev-deploy:
+    needs: [docker]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Intall Kubectl CLI
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.26.0' 
+
+      - name: Fetch Kubernetes Cluster Details
+        run: |
+          kubectl version --short -o yaml
+          echo ------------------------------------
+          kubectl get nodes
