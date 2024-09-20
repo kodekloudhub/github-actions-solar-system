@@ -184,7 +184,6 @@ jobs:
           echo ------------------------------------
           kubectl get nodes
           echo EXTERNAL-IP : 
-          kubectl -n ingress-nginx get svc ingress-nginx-controller
 
       - name: Replace Token In Manifest Files
         uses: cschleiden/replace-tokens@v1
@@ -196,6 +195,11 @@ jobs:
           NAMESPACE: ${{ vars.NAMESPACE }}
           REPLICAS: ${{ vars.REPLICAS }}
           IMAGE: ${{ env.DOCKERHUB_USERNAME }}/solar-system:${{ github.sha }}
+          INGRESS_IP: 127.0.0.1
+        
+      - name: Check Files
+        run: |
+          cat kubernetes/developemnt/*.yaml
 
       - name: Clean up
         if: always()
