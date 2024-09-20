@@ -68,12 +68,10 @@ jobs:
       steps:
           - name: Checkout Repository
             uses: actions/checkout@v4
-          - name: install kubectl
-            uses: azure/setup-kubectl@v3
+          - uses: azure/setup-kubectl@v3
             with:
               version: v1.26.0
-          - name: setup k8s contetext
-            uses: azure/k8s-set-context@v3
+          - uses: azure/k8s-set-context@v3
             with:
               method: kubeconfig
               kubeconfig: ${{ secrets.KUBECONFIG }}  
