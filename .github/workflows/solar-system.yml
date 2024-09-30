@@ -58,20 +58,66 @@ jobs:
           push: true
           tags: 'docker.io/seyiogunniran/solar-system:${{ github.sha }}'
           #tags: 'ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha }}'
-
+   
     dev-deploy:
       needs: docker
       runs-on: ubuntu-latest
       environment:
        name: development
+
       steps:
-      - uses: actions/checkout@v4
-      - uses: azure/setup-kubectl@v3
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Install kubectl Cli
+        uses: azure/setup-kubectl@v3
         with:
           version: v1.26.0
-      - uses: azure/k8s-set-context@v3
+
+      - name: Set kubconfig file
+        uses: azure/k8s-set-context@v3
         with:
           method: kubeconfig
           kubeconfig: '${{ secrets.KUBECONFIG }}'
-      - run: kubectl version --short -o yaml
 
+      - name: Fetch kubernetes cluster details
+        run: |
+          kubectl version --short -o yaml
+          echo --------------------------
+          kubectl get nodes
+
+      - name: Save AWS Ingress Controller IP as a GITHUB Env variable
+        run: |
+          kubectl get ingress -n game-2048
+
+      - name: Replace Token in Manifest files
+        uses: cschleiden/replace-tokens@v1
+        with:
+          tokenPrefix: '_{_'
+          tokenSuffix: '_}_'
+          files: '["kubernetes/development/*.yaml"]'
+        env:
+          NAMESPACE: ${{ vars.NAMESPACE }}
+	        REPLICAS: ${{ vars.REPLICAS }}
+	        IMAGE: docker.io/seyiogunniran/solar-systems:${{ github.sha }}
+
+      - name: Check files list
+        run: cat kubernetes/development/*.yaml
+
+      - name: Create MongoDB Seceret
+        run: |
+          kubectl -n ${{ vars.NAMESPACE }} create secret generic  mongo-db-creds
+          ---literal=MONGO_URI=${{ env.MONGO_URI }} \
+          ---literal=MONGO_USERNAME=${{ env.MONGO_USERNAME }} \
+          ---literal=MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }} \
+          ---save-config \
+          ---dry-run=client \
+          -o yaml | kubectl apply -f -
+
+      - name: Deploy kubernetes
+        run: |
+          kubectl apply -f kubernetes/development
+
+
+    
+    
