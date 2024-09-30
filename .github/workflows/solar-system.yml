@@ -64,7 +64,7 @@ jobs:
       runs-on: ubuntu-latest
       environment:
        name: development
-
+    
       steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -90,6 +90,7 @@ jobs:
 
       - name: Fetch kubernetes cluster details
         run: |
+          aws eks update-kubeconfig --name basic-cluster --region eu-north-1
           kubectl version --short -o yaml
           echo --------------------------
           kubectl get nodes
