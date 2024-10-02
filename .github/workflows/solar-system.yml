@@ -113,15 +113,15 @@ jobs:
       - name: Check files list
         run: cat kubernetes/development/*.yaml
 
-      - name: Create MongoDB Seceret
-        run: |
-          kubectl -n ${{ vars.NAMESPACE }} create secret generic  mongo-db-creds
-          ---literal=MONGO_URI=${{ env.MONGO_URI }} \
-          ---literal=MONGO_USERNAME=${{ env.MONGO_USERNAME }} \
-          ---literal=MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }} \
-          ---save-config \
-          ---dry-run=client \
-          -o yaml | kubectl apply -f -
+      # - name: Create MongoDB Seceret
+      #   run: |
+      #     kubectl -n ${{ vars.NAMESPACE }} create secret generic  mongo-db-creds
+      #     ---literal=MONGO_URI=${{ env.MONGO_URI }} \
+      #     ---literal=MONGO_USERNAME=${{ env.MONGO_USERNAME }} \
+      #     ---literal=MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD }} \
+      #     ---save-config \
+      #     ---dry-run=client \
+      #     -o yaml | kubectl apply -f -
 
       - name: Deploy kubernetes
         run: |
