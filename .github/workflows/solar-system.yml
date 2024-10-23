@@ -32,6 +32,6 @@ jobs:
        - name: upload unit case coverage report
          uses: actions/upload-artifact@v4
          with:
-           name: coverage test results
-           path: coverage
+           name: Test case results
+           path: test-results.xml
            retension-days: 5
