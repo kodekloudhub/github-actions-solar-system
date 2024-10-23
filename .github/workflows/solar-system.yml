@@ -12,7 +12,7 @@ env:
     MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}  
 
 jobs:
-    Code-Coverage:
+    unit-testing:
      runs-on: ubuntu-latest
      steps:
        - name: checkout repo
@@ -26,10 +26,10 @@ jobs:
        - name: Install dependencies
          run: npm install
 
-       - name: code coverage
-         run: npm  run coverage
+       - name: unit test caes
+         run: npm test
 
-       - name: upload code coverage report
+       - name: upload unit case coverage report
          uses: actions/upload-artifact@v4
          with:
            name: coverage test results
