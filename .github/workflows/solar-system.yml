@@ -36,22 +36,16 @@ jobs:
           path: test-results.xml
 
   code-coverage:
-    name: Code Coverage
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-      - name: Setup NodeJS Version
-        uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
         with:
           node-version: 18
-      - name: Install Dependencies
-        run: npm install
-      - name: Run code coverage
-        continue-on-error: true
+      - run: npm install
+      - continue-on-error: true
         run: npm run coverage
-      - name: Archive Test Result
-        uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v3
         with:
           name: Code-Coverage-Result
           path: coverage
