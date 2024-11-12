@@ -6,28 +6,48 @@ on:
     branches:
       - main
       - 'feature/*'
-    
+env:
+  MONGO_URI: mongodb+srv://supercluster.d83jj.mongodb.net/superData
+  MONGO_USERNAME: superuser
+  MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
 jobs:
-    unit-testing:
-        name: Unit Testing
-        runs-on: ubuntu-latest
-        steps:
-        - name: Checkout Repository
-          uses: actions/checkout@v4
-
-        - name: Setup NodeJS Version
-          uses: actions/setup-node@v3
-          with:
-            node-version: 20
-    
-        - name: Install Dependencies
-          run: npm install
-    
-        - name: Unit Testing
-          run: npm test
-          
-        - name: Archive Test Result
-          uses: actions/upload-artifact@v3
-          with:
-            name: Mocha-Test-Result
-            path: test-results.xml
+  unit-testing:
+    name: Unit Testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Setup NodeJS Version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - name: Cache NPM dependencies
+        uses: actions/cache@v3
+        with:
+           path: ~/.npm
+           key: '${{ runner.os }}-node-modules-${{ hashFiles(''package-lock.json'') }}'
+      - name: Install Dependencies
+        run: npm install
+      - name: Unit Testing
+        run: npm test
+      - name: Archive Test Result
+        if: always() #added
+        uses: actions/upload-artifact@v3
+        with:
+          name: Mocha-Test-Result
+          path: test-results.xml
+  code-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm install
+      - continue-on-error: true
+        run: npm run coverage
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Code-Coverage-Result
+          path: coverage
+          retention-days: 5
