@@ -84,7 +84,6 @@ jobs:
           context: .
           push: false
           tags: ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha}}
-
   dev-deploy:
     needs: docker
     runs-on: ubuntu-latest
@@ -119,4 +118,3 @@ jobs:
             }}
           INGRESS_IP: '${{ env.INGRESS_IP }}'
       - run: cat kubernetes/development/*.yaml
-      
