@@ -123,7 +123,7 @@ jobs:
   integration-test:
     if: contains(github.ref, 'feature/')
     needs: dev-deploy
-    # uses: ./.github/workflows/reusable-workflow.yml
-    uses: khaleel-git/github-actions-solar-system/.github/workflows/resuse-deployment.yml@feature-workflow
+    uses: ./.github/workflows/reusable-workflow.yml
+    # uses: khaleel-git/github-actions-solar-system/.github/workflows/resuse-deployment.yml@feature-workflow
     with:
       ingress-url: ${{ needs.dev-deploy.outputs.APP_INGRESS_URL }}
