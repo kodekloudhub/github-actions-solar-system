@@ -19,6 +19,10 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
+    - name:  Install Google Chrome 
+      run:   |
+              chmod +x ./scripts/InstallChrome.sh
+                       ./scripts/InstallChrome.sh
     - name: Test with Maven
       run: mvn clean test
   test_2:
@@ -29,5 +33,9 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
+    - name:  Install Google Chrome 
+      run:   |
+              chmod +x ./scripts/InstallChrome.sh
+                       ./scripts/InstallChrome.sh
     - name: Test with Maven
       run: mvn -B package --file ./MySeleniumProject/pom.xmlpom.xml test
