@@ -1,0 +1,65 @@
+name: Angular build and deopy
+on: 
+ workflow_dispatch:
+    inputs:
+     env: 
+       description: "which env to apply these changes"
+       default: "dev"
+       required: false
+       type: choice
+       options: 
+         - "dev"
+         - "uat"
+         - "prod"
+
+     run_group:
+       description: "select runner for deploy"
+       default: "dev-runner"
+       type: choice
+       required: false
+       options: 
+          - "dev-runner"
+          - "uat-runner"
+
+       
+permissions:
+  contents: read  # Allows the workflow to read repository contents
+  issues: write    # Allows the workflow to create and manage issues
+  pull-requests: write  # Allows the workflow to interact with pull requests
+
+
+defaults:
+  run:
+    shell: bash
+
+
+env:
+  GKE_DEV_CLUSTER_ZONE : "us-east1-a"
+  GKE_DEV_CLUSTER_NAME : "bhaskar-dev-cluster"
+  DEV_PROJECT : "your_project_id"
+  DEV_NS : "dev-ns"
+
+
+  GKE_UAT_CLUSTER_ZONE : "us-east1-a"
+  GKE_UAT_CLUSTER_NAME : "bhaskar-dev-cluster"
+  UAT_PROJECT : "your_project_id"
+  UAT_NS : "dev-ns"
+
+  ARTIFACT_ID: "10.5.24.13"
+
+
+jobs:
+  
+  Install_npm_depencies: 
+    runs-on: ubuntu-latest
+    name: install npm depencies
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        
+      - name: Set up Node.js
+        uses: actions/setup-node@v3  # Action to set up Node.js
+        with:
+          node-version: '18'  # Specify the Node.js version (e.g., 14, 16, 18)
+  
