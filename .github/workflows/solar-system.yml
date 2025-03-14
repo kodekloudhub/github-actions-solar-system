@@ -12,7 +12,8 @@ env:
   MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
     
 jobs:
-    unit-testing:
+  unit-testing:
+
         name: Unit Testing
         runs-on: ubuntu-latest
         steps:
@@ -23,7 +24,7 @@ jobs:
           uses: actions/setup-node@v4
           with:
             node-version: 20
-            
+
         - name: Cache NPM dependencies
           uses: actions/cache@v4
           id: cache-node-module
@@ -43,3 +44,24 @@ jobs:
           with:
             name: Mocha-Test-Result
             path: test-results.xml
+
+  docker:
+    name: Containerize
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: GHCR Login
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrest.GITHUB_TOKEN }}
+      
+      - name: Docker Build & Pudh 
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: github.io/${{ github.repository_owner }}/solar-system:${{ github.sha }}
