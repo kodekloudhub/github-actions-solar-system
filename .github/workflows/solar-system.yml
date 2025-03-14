@@ -48,6 +48,8 @@ jobs:
   docker:
     name: Containerize
     runs-on: ubuntu-latest
+    needs: 
+      - unit-testing
     permissions:
       contents: read
       packages: write
