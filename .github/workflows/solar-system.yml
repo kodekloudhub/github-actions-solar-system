@@ -85,7 +85,7 @@ jobs:
           version: <Our cluster version> 
 
       #2 - Importan create the repository secret with Kubeconfig
-      
+
       - name: Set Kubeconfig file
         uses:  azure/k8s-set-context@v4
         with:
@@ -97,3 +97,19 @@ jobs:
           kubectl version --short 
           echo ----------------------------------
           kubectl get node
+
+      - name: Save nginx Ingress Controller IP as a GITHUB Environment Variable
+        run: |
+            echo "INGRESS_IP=$(kubectl -n ingress get services ingress-controller -o jsonpath="{.status.loadbalancer.ingress[0].ip}")" >> $GITHUB_ENV
+
+      - name: Replace Token in Manifest files
+        uses: cschleiden/replace-tokens@v1
+        with:
+          tokenPrefix: '_{_'
+          tokenSuffix: '_}_'
+          files: '["kubernetes/development/*.yaml"]'
+        env:
+          NAMESPACE: ${{ vars.NAMESPACE}}
+          REPLICAS: ${{ vars.REPLICAS}}
+          IMAGE: ${{ vars.DOCKERHUB.USERNAME }}/solar-system:${{ github.sha }}
+          INGRESS_IP: ${{ env.INGRESS_IP}}
