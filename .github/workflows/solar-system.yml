@@ -83,7 +83,9 @@ jobs:
         uses: azure/setup-kubectl@v4
         with:
           version: <Our cluster version> 
+
       #2 - Importan create the repository secret with Kubeconfig
+      
       - name: Set Kubeconfig file
         uses:  azure/k8s-set-context@v4
         with:
