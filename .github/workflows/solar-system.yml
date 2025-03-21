@@ -74,6 +74,11 @@ jobs:
 
   dev-deploy:
     needs: docker
+    # We use environment varible
+    environment:
+      name: development
+      # When we use the url env we can see the url in the Github UI
+      url: https://${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
     #Create outputs jobs
     outputs:
       APP_INGRESS_URL: ${{ steps.set-ingress-host-addres.outputs.APP_INGRESS_HOST }}
@@ -86,8 +91,6 @@ jobs:
         uses: azure/setup-kubectl@v4
         with:
           version: <Our cluster version> 
-
-      
 
       - name: Set Kubeconfig file
         uses:  azure/k8s-set-context@v4
