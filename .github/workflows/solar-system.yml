@@ -74,17 +74,20 @@ jobs:
 
   dev-deploy:
     needs: docker
+    #Create outputs jobs
+    outputs:
+      APP_INGRESS_URL: ${{ steps.set-ingress-host-addres.outputs.APP_INGRESS_HOST }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-      #1
+      
       - name: Install kubectl CLI
         uses: azure/setup-kubectl@v4
         with:
           version: <Our cluster version> 
 
-      #2 - Importan create the repository secret with Kubeconfig
+      
 
       - name: Set Kubeconfig file
         uses:  azure/k8s-set-context@v4
@@ -99,8 +102,10 @@ jobs:
           kubectl get node
 
       - name: Save nginx Ingress Controller IP as a GITHUB Environment Variable
+        id: set-ingress-host-address # we add the output id
+        #The variable name must be GITHUB_OUTPUT 
         run: |
-            echo "INGRESS_IP=$(kubectl -n ingress get services ingress-controller -o jsonpath="{.status.loadbalancer.ingress[0].ip}")" >> $GITHUB_ENV
+            echo "INGRESS_IP=$(kubectl -n ingress get services ingress-controller -o jsonpath="{.status.loadbalancer.ingress[0].ip}")" >> $GITHUB_OUTPUT 
 
       - name: Replace Token in Manifest files
         uses: cschleiden/replace-tokens@v1
@@ -131,3 +136,16 @@ jobs:
       - name: Deploy to Dev Env
         run: |
           kubectl apply -f kubernetes/deployments 
+
+  integration-testing:
+    name: Dev Integration Testing
+    needs: dev-deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test URL Output using Curl and JQ
+        env:
+          URL: ${{needs.dev-deploy.outputs.APP_INGRESS_URL}}
+        run: |
+          echo $URL
+          echo "-------------------------------------------"
+          curl https://$URL/live -s -k | jq -r .status | grep - live
