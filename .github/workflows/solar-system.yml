@@ -1,6 +1,5 @@
 name: Solar System Workflow
 
-
 on: 
   workflow_dispatch:
   push:
@@ -9,7 +8,7 @@ on:
       - 'feature/*'
 env:
   MONGO_URI: ‘mongodb+srv://supercluster.d83jj.mongodb.net/superData'
-  MONGO_USERNAME: superuser
+  MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
   MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
     
 jobs:
@@ -34,6 +33,5 @@ jobs:
         - name: Archive Test Result
           uses: actions/upload-artifact@v4
           with:
-            if: always()
             name: Mocha-Test-Result
             path: test-results.xml
