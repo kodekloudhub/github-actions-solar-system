@@ -112,7 +112,7 @@ jobs:
           version: 'v1.28.1'
 
       - name: Set Kubectl Context
-        uses: azure/aks-set-context@v1
+        uses: azure/aks-set-context@v3
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBECONFIG }}
