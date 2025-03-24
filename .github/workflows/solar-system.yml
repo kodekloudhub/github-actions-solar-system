@@ -93,8 +93,7 @@ jobs:
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBECONFIG }}
-      - run: kubectl version -o yaml
-
+      - run: kubectl version --short -o yaml
       # - name: Fetch Kubernetes Cluster Detail
       #   run: |
       #     kubectl version --short 
@@ -104,24 +103,24 @@ jobs:
       # - name: Save nginx Ingress Controller IP as a GITHUB Environment Variable
       #   id: set-ingress-host-address # we add the output id
       #   #The variable name must be GITHUB_OUTPUT 
-      #   run: |
-      #       echo "INGRESS_IP=$(kubectl -n ingress get services ingress-controller -o jsonpath="{.status.loadbalancer.ingress[0].ip}")" >> $GITHUB_OUTPUT 
+      - run: |
+          echo "INGRESS_IP=$(kubectl -n ingress get services ingress-controller -o jsonpath="{.status.loadbalancer.ingress[0].ip}")" >> $GITHUB_OUTPUT 
 
       # - name: Replace Token in Manifest files
-      #   uses: cschleiden/replace-tokens@v1
-      #   with:
-      #     tokenPrefix: '_{_'
-      #     tokenSuffix: '_}_'
-      #     files: '["kubernetes/development/*.yaml"]'
-      #   env:
-      #     NAMESPACE: ${{ vars.NAMESPACE}}
-      #     REPLICAS: ${{ vars.REPLICAS}}
-      #     IMAGE: ${{ vars.DOCKERHUB.USERNAME }}/solar-system:${{ github.sha }}
-      #     INGRESS_IP: ${{ env.INGRESS_IP}}
+      - uses: cschleiden/replace-tokens@v1
+        with:
+          tokenPrefix: '_{_'
+          tokenSuffix: '_}_'
+          files: '["kubernetes/development/*.yaml"]'
+        env:
+          NAMESPACE: ${{ vars.NAMESPACE}}
+          REPLICAS: ${{ vars.REPLICAS}}
+          IMAGE: ${{ vars.DOCKERHUB.USERNAME }}/solar-system:${{ github.sha }}
+          INGRESS_IP: ${{ env.INGRESS_IP}}
       
       # - name: Check file
-      #   run: |
-      #     cat kubernetes/deployment/*.yaml
+      - run: |
+          cat kubernetes/deployment/*.yaml
         
       # - name: Create MongoDB Secrets
       #   run: |
