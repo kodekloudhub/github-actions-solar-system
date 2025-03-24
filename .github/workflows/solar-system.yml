@@ -107,7 +107,7 @@ jobs:
           echo "INGRESS_IP=$(kubectl -n ingress-nginx get services
           ingress-nginx-controller -o
           jsonpath='{.status.loadBalancer.ingress[0].ip}')" >> $GITHUB_ENV
-          
+
       - uses: cschleiden/replace-tokens@v1
         with:
           tokenPrefix: '_{_'
@@ -120,8 +120,7 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha
             }}
           INGRESS_IP: ${{ env.INGRESS_IP}}
-      - run: |
-          cat kubernetes/deployment/*.yaml
+      - run: cat kubernetes/deployment/*.yaml
         
       # - name: Create MongoDB Secrets
       #   run: |
