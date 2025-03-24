@@ -104,7 +104,7 @@ jobs:
       #   id: set-ingress-host-address # we add the output id
       #   #The variable name must be GITHUB_OUTPUT 
       - run: |
-          echo "INGRESS_IP=$(kubectl -n ingress get services ingress-controller -o jsonpath="{.status.loadbalancer.ingress[0].ip}")" >> $GITHUB_OUTPUT 
+          echo "INGRESS_IP=$(kubectl -n ingress get services ingress-controller -o jsonpath="{.status.loadbalancer.ingress[0].ip}")" >> $GITHUB_EVN 
 
       # - name: Replace Token in Manifest files
       - uses: cschleiden/replace-tokens@v1
