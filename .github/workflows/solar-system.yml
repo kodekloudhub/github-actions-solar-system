@@ -5,7 +5,12 @@ on:
     push:
         branches:
             - main
-            - 'feature/*'
+            - 'feature/shiva'
+
+env:
+    MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
+    MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
+    MONGO_URI: 'mongodb+srv://supercluster.d83jj.mongodb.net/superData'
 
 jobs:
     unit_testing:
@@ -29,6 +34,6 @@ jobs:
         - name: Archive Test Results
           uses: actions/upload-artifact@v4
           with:
-            name: Unit Testing xml Artifacts
+            name: Unit Testing Artifacts
             path: test-results.xml
 
