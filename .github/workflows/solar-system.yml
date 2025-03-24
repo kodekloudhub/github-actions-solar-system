@@ -29,6 +29,6 @@ jobs:
         - name: Archive Test Results
           uses: actions/upload-artifact@v4
           with:
-            name: Unit Testing Artifacts
+            name: Unit Testing xml Artifacts
             path: test-results.xml
 
