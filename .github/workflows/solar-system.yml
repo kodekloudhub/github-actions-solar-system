@@ -103,10 +103,11 @@ jobs:
       # - name: Save nginx Ingress Controller IP as a GITHUB Environment Variable
       #   id: set-ingress-host-address # we add the output id
       #   #The variable name must be GITHUB_OUTPUT 
-      - run: |
-          echo "INGRESS_IP=$(kubectl -n ingress get services ingress-controller -o jsonpath="{.status.loadbalancer.ingress[0].ip}")" >> $GITHUB_EVN 
-
-      # - name: Replace Token in Manifest files
+      - run: >
+          echo "INGRESS_IP=$(kubectl -n ingress-nginx get services
+          ingress-nginx-controller -o
+          jsonpath='{.status.loadBalancer.ingress[0].ip}')" >> $GITHUB_ENV
+          
       - uses: cschleiden/replace-tokens@v1
         with:
           tokenPrefix: '_{_'
@@ -119,8 +120,6 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha
             }}
           INGRESS_IP: ${{ env.INGRESS_IP}}
-      
-      # - name: Check file
       - run: |
           cat kubernetes/deployment/*.yaml
         
