@@ -115,7 +115,9 @@ jobs:
         env:
           NAMESPACE: ${{ vars.NAMESPACE}}
           REPLICAS: ${{ vars.REPLICAS}}
-          IMAGE: ${{ vars.DOCKERHUB.USERNAME }}/solar-system:${{ github.sha }}
+          IMAGE: >-
+            ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha
+            }}
           INGRESS_IP: ${{ env.INGRESS_IP}}
       
       # - name: Check file
