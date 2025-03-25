@@ -83,43 +83,53 @@ jobs:
       mongo-url: ${{ vars.MONGO_URI }}
       environment: development
       k8s-manifests-dir: kubernetes/development 
-
-
-  dev-integration-testing:
-    name: Dev Integration Testing
+  
+  # dev-deploy job
+  integration-test:
     needs: dev-deploy
-    runs-on: ubuntu-latest
-    steps:
-      - name: Test URL Output using Curl and JQ
-        env:
-          URL: ${{needs.dev-deploy.outputs.application-url}}
-        run: |
-          echo $URL
-          echo "-------------------------------------------"
-          curl https://$URL/live -s -k | jq -r .status | grep - live
-
-  prod-deploy:
-    if: github.ref == 'refs/heads/main'
-    needs: docker 
-    uses: ./.github/workflows/reuse-deployment.yml
-    secrets:
-      k8s-kubeconfig: ${{ secrets.KUBECONFIG }}
-      mongo-password: ${{ secrets.MONGO_PASSWORD}}
+    uses: ./.github/workflows/reusable-workflow.yml
     with:
-      mongo-url: ${{ vars.MONGO_URI }}
-      environment: production
-      k8s-manifests-dir: kubernetes/production
+      ingress-url: ${{ needs.dev-deploy.outputs.APP_INGRESS_URL }}
+# next job
+
+  # dev-integration-testing:
+  #   name: Dev Integration Testing
+  #   needs: dev-deploy
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Test URL Output using Curl and JQ
+  #       env:
+  #         URL: ${{needs.dev-deploy.outputs.application-url}}
+  #       run: |
+  #         echo $URL
+  #         echo "-------------------------------------------"
+  #         curl https://$URL/live -s -k | jq -r .status | grep - live
+
+  # prod-deploy:
+  #   if: github.ref == 'refs/heads/main'
+  #   needs: docker 
+  #   uses: ./.github/workflows/reuse-deployment.yml
+  #   secrets:
+  #     k8s-kubeconfig: ${{ secrets.KUBECONFIG }}
+  #     mongo-password: ${{ secrets.MONGO_PASSWORD}}
+  #   with:
+  #     mongo-url: ${{ vars.MONGO_URI }}
+  #     environment: production
+  #     k8s-manifests-dir: kubernetes/production
 
 
-  prod-integration-testing:
-    name: PROD Integration Testing
-    needs: prod-deploy
-    runs-on: ubuntu-latest
-    steps:
-      - name: Test URL Output using Curl and JQ
-        env:
-          URL: ${{needs.prod-deploy.outputs.application-url}}
-        run: |
-          echo $URL
-          echo "-------------------------------------------"
-          curl https://$URL/live -s -k | jq -r .status | grep - live
+  # prod-integration-testing:
+  #   name: PROD Integration Testing
+  #   needs: prod-deploy
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Test URL Output using Curl and JQ
+  #       env:
+  #         URL: ${{needs.prod-deploy.outputs.application-url}}
+  #       run: |
+  #         echo $URL
+  #         echo "-------------------------------------------"
+  #         curl https://$URL/live -s -k | jq -r .status | grep - live
+
+
+  
