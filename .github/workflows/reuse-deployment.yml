@@ -21,6 +21,9 @@ on:
           default: dev
           required: true
           type: string
+      outputs:
+        application-url:
+          value: ${{ jobs.reuseble-deploy.outputs.APP_INGRESS_URL}}
       secrets:
         k8s-kubeconfig:
           required: true
