@@ -77,7 +77,7 @@ jobs:
               uses: actions/upload-artifact@v4
               with:
                 name: Code-Coverage-Results
-                path: coverage.xml
+                path: coverage
                 retention-days: 1
 
   repoting-s3:
