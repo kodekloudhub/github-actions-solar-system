@@ -25,7 +25,8 @@ jobs:
           with:
             node-version: 20
 
-        - uses: actions/cache@v4
+        - name: Cache npm Dependancies
+          uses: actions/cache@v4
           with:
             path: node_modules
             key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
@@ -54,7 +55,8 @@ jobs:
           with:
             node-version: 20
         
-        - uses: actions/cache@v4
+        - name: Cache npm Dependancies
+          uses: actions/cache@v4
           with:
            path: node_modules
            key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}    
