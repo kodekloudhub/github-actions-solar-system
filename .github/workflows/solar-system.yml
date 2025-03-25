@@ -100,7 +100,7 @@ jobs:
         run: |
           ls -ltra
           mkdir reports-${{ github.sha }}
-          mv coverage.xml reports-${{ github.sha }}/
+          mv cobertura-coverage.xml reports-${{ github.sha }}/
           mv test-results.xml reports-${{ github.sha }}/
           ls -ltra reports-${{github.sha }}/
 
