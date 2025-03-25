@@ -82,17 +82,17 @@ jobs:
 
   repoting-s3:
     needs: [code-coverage, unit-testing]
-    name: AWS S3 -m Upload Report
+    name: AWS S3 Upload Report
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
       - name: Download Mocha Test
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: Mocha-Test-Result
 
       - name: Download Code Coverage Artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: Code-Coverage-Results
 
