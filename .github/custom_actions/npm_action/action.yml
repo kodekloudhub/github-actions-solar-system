@@ -8,7 +8,7 @@ runs:
   using: "composite"
   steps:
     - name: Cache NPM dependencies
-      uses: action/cache@v4
+      uses: actions/cache@v4
       with:
         path: ${{inputs.path-of-folder}}
         key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
