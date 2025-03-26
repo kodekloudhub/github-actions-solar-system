@@ -26,15 +26,10 @@ jobs:
         #   with:
         #     node-version: 20
 
-        - name: Cache NPM dependencies
-          uses: actions/cache@v4
-          id: cache-node-module
+        - name: Composite Action - Cache $ Install NPM Package
+          uses: ./.github/custom_actions/npm_action
           with:
-            path: ~/.npm
-            key: '${{ runner.os }}-node-modules-${{ hashFiles(''package-lock.json'') }}'
-    
-        - name: Install Dependencies
-          run: npm install
+            path-of-folder: node_modules
     
         - name: Unit Testing
           run: npm test
@@ -80,32 +75,32 @@ jobs:
                 path: coverage
                 retention-days: 1
 
-  repoting-s3:
-    needs: [code-coverage, unit-testing]
-    name: AWS S3 Upload Report
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - name: Download Mocha Test
-        uses: actions/download-artifact@v4
-        with:
-          name: Mocha-Test-Result
+  # repoting-s3:
+  #   needs: [code-coverage, unit-testing]
+  #   name: AWS S3 Upload Report
+  #   runs-on: ubuntu-latest
+  #   continue-on-error: true
+  #   steps:
+  #     - name: Download Mocha Test
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: Mocha-Test-Result
 
-      - name: Download Code Coverage Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: Code-Coverage-Results
+  #     - name: Download Code Coverage Artifact
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: Code-Coverage-Results
 
-      - name: Merge Test Files
-        run: |
-          ls -ltra
-          mkdir reports-${{ github.sha }}
-          mv cobertura-coverage.xml reports-${{ github.sha }}/
-          mv test-results.xml reports-${{ github.sha }}/
-          ls -ltra reports-${{github.sha }}/
+  #     - name: Merge Test Files
+  #       run: |
+  #         ls -ltra
+  #         mkdir reports-${{ github.sha }}
+  #         mv cobertura-coverage.xml reports-${{ github.sha }}/
+  #         mv test-results.xml reports-${{ github.sha }}/
+  #         ls -ltra reports-${{github.sha }}/
 
-      - name: Upload to wsl S3
-        run: echo "Uploading....."
+  #     - name: Upload to wsl S3
+  #       run: echo "Uploading....."
 
   # docker:
   #   name: Containerize
