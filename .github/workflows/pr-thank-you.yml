@@ -20,6 +20,7 @@ jobs:
               with:
                 github-token: ${{ secrets.GITHUB_TOKEN }}
                 giphy-api-key: ${{ secrets.GIPHY_API_KEY }}
+                repository: ${{ github.repository }}
 
 
             - name: Post JavaScript Action PR Comment 
@@ -27,5 +28,6 @@ jobs:
               with:
                 github-token: ${{ secrets.GITHUB_TOKEN }}
                 giphy-api-key: ${{ secrets.GIPHY_API_KEY }}
+                repository: ${{ github.repository }}
             
                 
