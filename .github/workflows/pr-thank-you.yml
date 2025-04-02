@@ -1,3 +1,5 @@
+name: PR comment Giphy GIf
+
 on:
     pull_request:
         types:
