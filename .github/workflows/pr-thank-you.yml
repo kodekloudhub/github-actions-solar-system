@@ -20,15 +20,13 @@ jobs:
               with:
                 github-token: ${{ secrets.GITHUB_TOKEN }}
                 giphy-api-key: ${{ secrets.GIPHY_API_KEY }}
-                
-
-      
-
-            - name: Post JavaScript Action PR Comment 
-              uses: kaiscerev1/js-action-pd-giphy-comment@1.0.0-alpha
-              with:
-                github-token: ${{ secrets.GITHUB_TOKEN }}
-                giphy-api-key: ${{ secrets.GIPHY_API_KEY }}
+                                 
+ 
+            # - name: Post JavaScript Action PR Comment 
+            #   uses: kaiscerev1/js-action-pd-giphy-comment@1.0.0-alpha
+            #   with:
+            #     github-token: ${{ secrets.GITHUB_TOKEN }}
+            #     giphy-api-key: ${{ secrets.GIPHY_API_KEY }}
                
             
                 
