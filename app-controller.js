@@ -50,7 +50,7 @@ function func() {
             
             // Special handling for 503 status (database connection error)
             if (res2.status === 503) {
-                throw new Error("Database connection error. Please try again later.");
+                throw new Error("Database connection error.");
             } else if (res2.status === 404) {
                 // Directly handle 404 (not found) without trying to parse JSON
                 throw new Error('Ooops, We have 8 Planets and a Sun.\nSelect a number from 0 - 8');
