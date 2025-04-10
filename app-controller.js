@@ -12,7 +12,7 @@ window.onload = function() {
             if (res.ok) {
                 return res.json();
             }
-            thrownewError('Request failed');
+            throw new Error('Request failed');
         }).catch(function(error) {
             console.log(error);
         })
@@ -43,25 +43,49 @@ function func() {
             }
         })
         .then(function(res2) {
+            console.log("Response status:", res2.status);
             if (res2.ok) {
                 return res2.json();
             }
-            thrownewError('Request failed.');
+            
+            // Special handling for 503 status (database connection error)
+            if (res2.status === 503) {
+                throw new Error("Database connection error.");
+            } else if (res2.status === 404) {
+                // Directly handle 404 (not found) without trying to parse JSON
+                throw new Error('Ooops, We have 8 Planets and a Sun.\nSelect a number from 0 - 8');
+            }
+            
+            // For other non-OK responses, try to parse the error message
+            return res2.json().then(errorData => {
+                if (errorData && errorData.error) {
+                    throw new Error(errorData.error);
+                } else {
+                    throw new Error('Request failed');
+                }
+            }).catch(() => {
+                // If we can't parse the JSON, use a default error message based on status code
+                if (res2.status === 404) {
+                    throw new Error('Ooops, We have 8 Planets and a Sun.\nSelect a number from 0 - 8');
+                } else {
+                    throw new Error('Request failed');
+                }
+            });
         }).catch(function(error) {
-            alert("Ooops, We have 8 planets.\nSelect a number from 0 - 8")
-            console.log(error);
+            // Display the specific error message
+            alert(error.message);
+            console.log("Error:", error.message);
         })
         .then(function(data) {
-            document.getElementById('planetName').innerHTML = ` ${data.name} `
+            if (data) {
+                document.getElementById('planetName').innerHTML = ` ${data.name} `
 
-            const element = document.getElementById("planetImage");
-            const image = ` ${data.image} `
-            element.style.backgroundImage  = "url("+image+")"
+                const element = document.getElementById("planetImage");
+                const image = ` ${data.image} `
+                element.style.backgroundImage  = "url("+image+")"
 
-            const planet_description = ` ${data.description} `
-            document.getElementById('planetDescription').innerHTML = planet_description.replace(/(.{80})/g, "$1<br>");
-
-          
+                const planet_description = ` ${data.description} `
+                document.getElementById('planetDescription').innerHTML = planet_description.replace(/(.{80})/g, "$1<br>");
+            }
         });
-
 }
