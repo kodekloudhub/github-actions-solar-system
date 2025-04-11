@@ -1,0 +1,32 @@
+name: PR comment Giphy GIf
+
+on:
+    pull_request:
+        types:
+          - opened
+
+jobs:
+    testing-action:
+        runs-on: ubuntu-latest
+        permissions:
+            issues: write
+            pull-requests: write
+        steps:
+            - name: Checkout Repositoty
+              uses: actions/checkout@v4
+            
+            - name: Post Docker Action PR Comment 
+              uses: kaiscerev1/Docker-Custom-Action@main
+              with:
+                github-token: ${{ secrets.GITHUB_TOKEN }}
+                giphy-api-key: ${{ secrets.GIPHY_API_KEY }}
+                                 
+ 
+            # - name: Post JavaScript Action PR Comment 
+            #   uses: kaiscerev1/js-action-pd-giphy-comment@1.0.0-alpha
+            #   with:
+            #     github-token: ${{ secrets.GITHUB_TOKEN }}
+            #     giphy-api-key: ${{ secrets.GIPHY_API_KEY }}
+               
+            
+                

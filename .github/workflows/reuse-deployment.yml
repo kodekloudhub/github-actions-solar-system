@@ -1,0 +1,81 @@
+name: Deployment - Reusable Workflow
+
+on:
+    workflow_call:
+      inputs:
+        mongo-url:
+          required: true
+          type: string
+        kubectl-version:
+          description: Provide the required kubectl version
+          default: v1.27.0
+          required: false
+          type: string
+        k8s-manifests-dir:
+          description: Directory containing manifests files
+          default: kubernetes/
+          required: true
+          type: string
+        environment:
+          description: Provide the Development Environment 
+          default: dev
+          required: true
+          type: string
+      outputs:
+        application-url:
+          value: ${{ jobs.reuseble-deploy.outputs.APP_INGRESS_URL}}
+      secrets:
+        k8s-kubeconfig:
+          required: true
+        mongo-password:
+          required: true
+
+jobs:
+    reuseble-deploy:
+        environment:
+            name: ${{ inputs.environment}}
+            url: https://${{ steps.set-ingress-host-address.outputs.APP_INGRESS_HOST }}
+        outputs:
+            APP_INGRESS_URL: ${{ steps.set-ingress-host-addres.outputs.APP_INGRESS_HOST }}
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: azure/setup-kubectl@v4
+              with:
+                version: ${{ inputs.kubectl-version }}
+            - uses: azure/k8s-set-context@v4
+              with: 
+                method: kubeconfig
+                kubeconfig: ${{ secrets.k8s-kubeconfig }}
+            - run: >
+                echo "INGRESS_IP=$(kubectl -n ingress-nginx get services
+                ingress-nginx-controller -o 
+                jsonpath='{.status.loadBalancer.ingress[0].ip}')" >> $GITHUB_ENV
+            - uses: cschleiden/replace-tokens@v1
+              with:
+                  tokenPrefix: '_{_'
+                  tokenSuffix: '_}_'
+                  files: ${{inputs.k8s-manifest-dir}}*.yaml
+              env:
+                NAMESPACE: ${{ vars.NAMESPACE}}
+                REPLICAS: ${{ vars.REPLICAS}}
+                IMAGE: >-
+                  ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha
+                  }}
+                  INGRESS_IP: ${{ env.INGRESS_IP}}
+
+            - run: cat ${{inputs.k8s-manifest-dir}}*.yaml
+                
+            - name: Create MongoDB Secrets
+              run: |
+                  kubectl -n ${{ vars.NAMESPACE }} create secret generic mongo-db-creds \
+                  --from-literal=MONGO_URI=${{ inputs.mongo-url }} \
+                  --from-literal=MONGO_USERNAME=${{ vars.MONGO_USERNAME }} \
+                  --from-literal=MONGO_PASSWORD=${{ secrets.mongo-password }} \
+                  --save-config \
+                  --dry-run=client \
+                  -o yaml | kubectl apply -f -
+        
+            - name: Deploy to Dev Env
+              run: |
+                  kubectl apply -f ${{inputs.k8s-manifest-dir}}  
