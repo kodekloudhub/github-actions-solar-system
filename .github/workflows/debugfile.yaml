@@ -1,0 +1,46 @@
+name: Deploy with kubectl (manual setup)
+on:
+  push:
+    branches:
+      - main
+      - 'feature/*'
+  
+
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: stable
+
+
+    - name: Debug information
+      run: |
+        echo "Current working directory: $(pwd)"
+        echo "Repository contents:"
+        ls -la
+
+    # - name: Install kubectl manually
+    #   run: |
+    #     sudo apt-get update
+    #     sudo apt-get install -y apt-transport-https ca-certificates curl
+    #     curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+    #     echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+    #     sudo apt-get update
+    #     sudo apt-get install -y kubectl
+
+    # - name: Configure kubectl
+    #   run: |
+    #     mkdir -p $HOME/.kube/
+    #     echo "${{ secrets.KUBE_CONFIG }}" > $HOME/.kube/config
+    #     chmod 600 $HOME/.kube/config
+
+    # - name: Test kubectl
+    #   run: |
+    #     kubectl version
+    #     kubectl get nodes
