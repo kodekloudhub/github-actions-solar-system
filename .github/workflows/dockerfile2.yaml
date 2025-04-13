@@ -1,7 +1,7 @@
-name: Solar System Workflow the flow
+name: ubiowoo Solar System Workflow the flow
 
 on: 
-  workflow_dispatch:
+ 
   push:
     branches:
       - main
