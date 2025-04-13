@@ -16,7 +16,7 @@ jobs:
     - name: Set up kubectl
       uses: azure/setup-kubectl@v3
       with:
-        version: stable
+        version: "latest"
 
 
     - name: Debug information
