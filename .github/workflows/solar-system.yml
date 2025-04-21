@@ -6,6 +6,10 @@ on:
     branches:
       - main
       - 'feature/*'
+env:
+  MONGO_URI: 'mongodb+srv://supercluster.d83jj.mongodb.net/superData'
+  MONGO_USERNAME: superuser
+  MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
     
 jobs:
     unit-testing:
@@ -19,7 +23,19 @@ jobs:
           uses: actions/setup-node@v4
           with:
             node-version: 20
+
+        # Cacheing dependencies, whenever json file changes new cache will be createdz
+        - name: Cache NPM dependencies
+          # id: cache-npm
+          uses: actions/cache@v4
+          env:
+            cache-name: cache-node-modules
+          with:
+            # npm cache files are stored in `~/.npm` on Linux/macOS
+            path: node_modules
+            key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
     
+            
         - name: Install Dependencies
           run: npm install
     
@@ -27,7 +43,45 @@ jobs:
           run: npm test
           
         - name: Archive Test Result
+          if: always()
           uses: actions/upload-artifact@v4
           with:
             name: Mocha-Test-Result
             path: test-results.xml
+    
+
+    code-coverage:
+      runs-on: ubuntu-latest
+      steps:
+        - name: checkout the repository
+          uses: actions/checkout@v4
+    
+        - name: setup NodeJS of version 18
+          uses: actions/setup-node@v4
+          with:
+            node-version: 18
+        
+        # Cacheing dependencies, whenever json file changes new cache will be createdz
+        - name: Cache NPM dependencies
+          # id: cache-npm
+          uses: actions/cache@v4
+          env:
+            cache-name: cache-node-modules
+          with:
+            # npm cache files are stored in `~/.npm` on Linux/macOS
+            path: node_modules
+            key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+    
+
+        - name: Install NodeJS dependencies
+          run: npm install
+
+        - name: Run Code-coverage command 
+          continue-on-error: true
+          run: npm run code-coverage
+
+        - name: Code-Coverage-Result
+          uses: actions/upload-artifact@v4
+          with:
+            path: coverage
+            retention-days: 5
