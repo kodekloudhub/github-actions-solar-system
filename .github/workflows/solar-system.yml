@@ -51,6 +51,10 @@ jobs:
         - name: Npm Install
           run: npm install
 
+        - name: Coverage
+          continue-on-error: true
+          run: npm run coverage
+
         - name: Upload artifact
           uses: actions/upload-artifact@v4
           with:
