@@ -112,6 +112,8 @@ jobs:
 
     integration-dev:
       runs-on: ubuntu-latest
+      needs:
+      - dev-deploy
       steps:
       - name: Integration
         run: echo ${{ needs.dev-deploy.outputs.APP_INGRESS_URL }}
