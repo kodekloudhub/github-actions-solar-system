@@ -7,6 +7,7 @@ jobs:
   redeploy:
     runs-on: ubuntu-latest
     environment:
+      name: development
       url: "https://${{ steps.save_ingress_ip.outputs.INGRESS_IP }}"
     outputs:
       APP_INGRESS_URL: "https://${{ steps.save_ingress_ip.outputs.INGRESS_IP }}"
