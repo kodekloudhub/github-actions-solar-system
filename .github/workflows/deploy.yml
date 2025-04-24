@@ -57,6 +57,7 @@ jobs:
         continue-on-error: true
 
       - name: Save INGRESS_IP
+        id: save_ingress_ip
         run: >
           echo "INGRESS_IP=$(kubectl -n ingress-nginx get services
           ingress-nginx-controller -o
