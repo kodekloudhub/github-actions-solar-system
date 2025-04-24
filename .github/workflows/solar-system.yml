@@ -110,10 +110,18 @@ jobs:
         mongodb-password: ${{ secrets.MONGO_PASSWORD }}
       if: contains(github.ref, 'feature/')
 
+    integration-dev:
+      runs-on: ubuntu-latest
+      steps:
+      - name: Integration
+        run: echo ${{ needs.dev-deploy.outputs.APP_INGRESS_URL }}
+
     prod-deploy:
       uses: ./.github/workflows/deploy.yml
       needs:
         - docker
+        - dev-deploy
+        - integration-dev
       with:
         mongodb-uri: ${{ vars.MONGO_URI }}
         environment: development
@@ -125,3 +133,5 @@ jobs:
       if: github.ref == 'refs/heads/main'
 
 
+
+    

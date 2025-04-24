@@ -23,6 +23,9 @@ on:
         required: true
       mongodb-password:
         required: true
+    outputs:
+      application_url:
+        value: ${{ jobs.redeploy.outputs.APP_INGRESS_URL }}
 
 
 jobs:
