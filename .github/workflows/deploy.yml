@@ -2,12 +2,34 @@ name: Solar system
 
 on:
   workflow_call:
+    inputs:
+      mongodb-uri:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+      kubectl_ver:
+        required: false
+        type: string
+        default: v1.27.0
+      k8s_dir:
+        description: Environment
+        required: true
+        type: string
+        default: kubernetes/
+    secrets:
+      k8s-kubeconfig:
+        required: true
+      mongodb-password:
+        required: true
+
 
 jobs:
   redeploy:
     runs-on: ubuntu-latest
     environment:
-      name: development
+      name: ${{ inputs.environment }}
       url: "https://${{ steps.save_ingress_ip.outputs.INGRESS_IP }}"
     outputs:
       APP_INGRESS_URL: "https://${{ steps.save_ingress_ip.outputs.INGRESS_IP }}"
@@ -18,14 +40,14 @@ jobs:
       - name: Install Kubectl
         uses: azure/setup-kubectl@v4
         with:
-          version: 'v1.28.1'
+          version: ${{ inputs.kubectl_ver }}
         id: install
 
       - name: Setup kubecontext
         uses: azure/k8s-set-context@v4
         with:
           method: kubeconfig
-          kubeconfig: '${{ secrets.KUBECONFIG }}'
+          kubeconfig: '${{ secrets.k8s-kubeconfig }}'
 
       - name: Check kubectl
         run: kubectl version -o yaml
@@ -36,13 +58,16 @@ jobs:
           echo "INGRESS_IP=$(kubectl -n ingress-nginx get services
           ingress-nginx-controller -o
           jsonpath='{.status.loadBalancer.ingress[0].ip}')" >> $GITHUB_ENV
+
+      - name: Create mongodb secret
+        run: echo Create secret ${{ secrets.mongodb-password }} for ${{ inputs.mongodb-uri }}
       
       - name: Replace kubernetes files
         uses: cschleiden/replace-tokens@v1
         with:
           tokenPrefix: '_{_'
           tokenSuffix: '_}_'
-          files: '["kubernetes/development/*.yaml"]'
+          files: '["${{ inputs.k8s_dir }}/${{ inputs.environment }}/*.yaml"]'
         env:
           NAMESPACE: '${{ vars.NAMESPACE }}'
           REPLICAS: '${{ vars.REPLICAS }}'

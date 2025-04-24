@@ -100,15 +100,28 @@ jobs:
       uses: ./.github/workflows/deploy.yml
       needs:
         - docker
-      with: {}
-      secrets: {}
+      with:
+        mongodb-uri: ${{ vars.MONGO_URI }}
+        environment: development
+        kubectl_ver: v1.27.0
+        k8s_dir: kubernetes/
+      secrets:
+        k8s-kubeconfig: ${{ secrets.KUBECONFIG }}
+        mongodb-password: ${{ secrets.MONGO_PASSWORD }}
       if: contains(github.ref, 'feature/')
 
     prod-deploy:
       uses: ./.github/workflows/deploy.yml
       needs:
         - docker
-      with: {}
-      secrets: {}
+      with:
+        mongodb-uri: ${{ vars.MONGO_URI }}
+        environment: development
+        kubectl_ver: v1.27.0
+        k8s_dir: kubernetes/
+      secrets:
+        k8s-kubeconfig: ${{ secrets.KUBECONFIG }}
+        mongodb-password: ${{ secrets.MONGO_PASSWORD }}
       if: github.ref == 'refs/heads/main'
+
 
