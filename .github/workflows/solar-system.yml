@@ -1,33 +1,79 @@
-name: Solar System Workflow
+name: Solar System Testing
 
-on: 
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-      - 'feature/*'
-    
+on:
+    workflow_dispatch:
+    push:
+        branches:
+            - main
+            - 'feature/shiva'
+
+env:
+    MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
+    MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
+    MONGO_URI: 'mongodb+srv://supercluster.d83jj.mongodb.net/superData'
+
 jobs:
-    unit-testing:
+    unit_testing:
         name: Unit Testing
         runs-on: ubuntu-latest
         steps:
         - name: Checkout Repository
           uses: actions/checkout@v4
-
-        - name: Setup NodeJS Version
+        
+        - name: Setup NodeJs
           uses: actions/setup-node@v4
           with:
             node-version: 20
-    
-        - name: Install Dependencies
-          run: npm install
-    
-        - name: Unit Testing
+
+        - name: Cache npm Dependancies
+          uses: actions/cache@v4
+          with:
+            path: node_modules
+            key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
+        
+        - name: Install dependencies
+          run: npm install 
+        
+        - name: Run Test Cases
           run: npm test
-          
-        - name: Archive Test Result
+
+        - name: Archive Test Results
           uses: actions/upload-artifact@v4
           with:
-            name: Mocha-Test-Result
+            name: Unit Testing Artifacts
             path: test-results.xml
+
+    code_coverage:
+        name: code coverage
+        runs-on: ubuntu-latest
+        steps:
+        - name: Checkout Repo
+          uses: actions/checkout@v4
+
+        - name: Setup NodeJs
+          uses: actions/setup-node@v4
+          with:
+            node-version: 20
+        
+        - name: Cache npm Dependancies
+          uses: actions/cache@v4
+          with:
+           path: node_modules
+           key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}    
+
+        - name: Install dependencies
+          run: npm install
+        
+        - name: Run Code Coverage
+          run: npm run coverage
+        
+        - name: Upload Coverage Artifcats
+          if: always()
+          uses: actions/upload-artifact@v4
+          with:
+            name: Code coverage
+            path: coverage
+            retention-days: 5 
+            
+
+
