@@ -6,28 +6,124 @@ on:
     branches:
       - main
       - 'feature/*'
-    
-jobs:
-    unit-testing:
-        name: Unit Testing
-        runs-on: ubuntu-latest
-        steps:
-        - name: Checkout Repository
-          uses: actions/checkout@v4
 
-        - name: Setup NodeJS Version
-          uses: actions/setup-node@v4
-          with:
-            node-version: 20
-    
-        - name: Install Dependencies
-          run: npm install
-    
-        - name: Unit Testing
-          run: npm test
-          
-        - name: Archive Test Result
-          uses: actions/upload-artifact@v4
-          with:
-            name: Mocha-Test-Result
-            path: test-results.xml
+env:
+  MONGO_URI: 'mongodb+srv://supercluster.d83jj.mongodb.net/superData'
+  MONGO_USERNAME: superuser
+  MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
+  
+
+jobs:
+  unit-testing:
+    name: Unit Testing
+    runs-on: ubuntu-latest
+    container:
+      image: node:18 
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      # - name: Setup NodeJS Version
+      #   uses: actions/setup-node@v3
+      #   with:
+      #     node-version: 20 
+      
+      
+      
+      - name: Cache NPM dependencies
+        uses: actions/cache@v3
+        with:
+            path: ~/.npm
+            key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json')}}
+
+      - name: Install Dependencies
+        run: npm install
+      - name: Unit Testing
+        run: npm test
+      - name: Archive Test Result
+        if: always() #added
+        uses: actions/upload-artifact@v3
+        with:
+          name: Mocha-Test-Result
+          path: test-results.xml
+
+  code-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm install
+      - continue-on-error: true
+        run: npm run coverage
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Code-Coverage-Result
+          path: coverage
+          retention-days: 5
+  
+  docker:
+    name: Containerization
+    needs: [unit-testing, code-coverage]
+    permissions:
+        packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: false
+          tags: ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha}}
+  
+  dev-deploy:
+    needs: docker
+    runs-on: ubuntu-latest
+    environment:
+      name: development
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-kubectl@v3
+        with:
+          version: v1.26.0
+      - uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: '${{ secrets.KUBECONFIG }}'
+      - run: kubectl version
+      #- run: kubectl version --short -o yaml
+      # Below codes are added to complete the task
+      - run: >
+          echo "INGRESS_IP=$(kubectl -n ingress-nginx get services
+          ingress-nginx-controller -o
+          jsonpath='{.status.loadBalancer.ingress[0].ip}')" >> $GITHUB_ENV
+      - uses: cschleiden/replace-tokens@v1
+        with:
+          tokenPrefix: '_{_'
+          tokenSuffix: '_}_'
+          files: '["kubernetes/development/*.yaml"]'
+        env:
+          NAMESPACE: '${{ vars.NAMESPACE }}'
+          REPLICAS: '${{ vars.REPLICAS }}'
+          IMAGE: >-
+            ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha
+            }}
+          INGRESS_IP: '${{ env.INGRESS_IP }}'
+      - run: cat kubernetes/development/*.yaml
+
+  integration-test:
+    if: contains(github.ref, 'feature/')
+    needs: dev-deploy
+    uses: ./.github/workflows/reusable-workflow.yml
+    # uses: khaleel-git/github-actions-solar-system/.github/workflows/resuse-deployment.yml@feature-workflow
+    with:
+      ingress-url: ${{ needs.dev-deploy.outputs.APP_INGRESS_URL }}
