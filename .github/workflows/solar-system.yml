@@ -7,6 +7,11 @@ on:
       - main
       - 'feature/*'
     
+env:
+  MONGO_URI: ‘mongodb+srv://supercluster.d83jj.mongodb.net/superData'
+  MONGO_USERNAME: superuser
+  MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
+
 jobs:
     unit-testing:
         name: Unit Testing
@@ -19,6 +24,12 @@ jobs:
           uses: actions/setup-node@v4
           with:
             node-version: 20
+
+        - name: Cache NPM Dependencies
+          uses: actions/cache@v4
+          with:
+            path: ~/.npm
+            key: '${{ runner.os }}-node-${{ hashFiles(''package-lock.json'')}}'
     
         - name: Install Dependencies
           run: npm install
@@ -27,7 +38,37 @@ jobs:
           run: npm test
           
         - name: Archive Test Result
+          if: always()
           uses: actions/upload-artifact@v4
           with:
             name: Mocha-Test-Result
             path: test-results.xml
+
+    code-coverage:
+      runs-on: ubuntu-latest
+      steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+      
+      - name: Cache NPM Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: '${{ runner.os }}-node-${{ hashFiles(''package-lock.json'') }}'
+
+      - name: Install Dependencies
+        run: npm install
+  
+      - name: Run code-coverage
+        continue-on-error: true
+        run: npm run coverage
+
+      - name: Save the code coverage result
+        uses: actions/upload-artifact@v4
+        with:
+          name: Code-Coverage-Result
+          path: coverage
+          retention-days: 5
