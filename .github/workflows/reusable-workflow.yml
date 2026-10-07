@@ -1,0 +1,18 @@
+name: Testing - Reusable Workflow
+on: 
+  workflow_dispatch:
+  inputs:
+    ingress_url:
+      description: Provide the Ingress URL
+      required: true
+      type: string
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          URL: '${{ inputs.ingress_url }}'
+        run: |
+          curl https://$URL/live -s -k | jq -r .status | grep -i live
+
+    
