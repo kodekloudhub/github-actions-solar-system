@@ -7,6 +7,7 @@ metadata:
   name: solar-system
   namespace: _{_NAMESPACE_}_
 spec:
+    ingressClassName: nginx
     rules:
     - host: solar-system-_{_NAMESPACE_}_._{_INGRESS_IP_}_.nip.io
       http:

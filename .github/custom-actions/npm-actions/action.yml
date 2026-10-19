@@ -1,0 +1,9 @@
+name: 'NPM Install Action'
+description: 'Install Node.js dependencies from the project lockfile'
+inputs:
+  path:
+    description: 'Path to the directory containing package.json'
+    required: true
+runs:
+  using: node20
+  main: index.js

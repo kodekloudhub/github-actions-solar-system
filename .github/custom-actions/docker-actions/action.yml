@@ -1,0 +1,30 @@
+name: Docker Build, Test, and Publish
+description: Build and test the application image, then publish it to Docker Hub and GHCR
+inputs:
+  dockerhub_image:
+    description: Fully qualified Docker Hub image tag
+    required: true
+  ghcr_image:
+    description: Fully qualified GitHub Container Registry image tag
+    required: true
+  dockerhub_username:
+    description: Docker Hub username
+    required: true
+  dockerhub_token:
+    description: Docker Hub access token
+    required: true
+  ghcr_username:
+    description: GitHub Container Registry username
+    required: true
+  ghcr_token:
+    description: GitHub Container Registry access token
+    required: true
+  mongo_username:
+    description: MongoDB service username for the image test
+    required: true
+  mongo_password:
+    description: MongoDB service password for the image test
+    required: true
+runs:
+  using: node20
+  main: index.js

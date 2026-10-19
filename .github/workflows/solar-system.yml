@@ -6,28 +6,264 @@ on:
     branches:
       - main
       - 'feature/*'
+      
     
 jobs:
     unit-testing:
         name: Unit Testing
         runs-on: ubuntu-latest
+        strategy:
+          matrix:
+            nodejs_version: [18, 20]
+        services:
+          mongodb:
+            image: mongo:5.0
+            env:
+              MONGO_INITDB_ROOT_USERNAME: ci-user
+              MONGO_INITDB_ROOT_PASSWORD: ci-password
+            ports:
+              - 27017:27017
+            options: >-
+              --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\")'"
+              --health-interval 10s
+              --health-timeout 5s
+              --health-retries 5
+        env:
+          MONGO_URI: mongodb://localhost:27017/superData?authSource=admin
+          MONGO_USERNAME: ci-user
+          MONGO_PASSWORD: ci-password
         steps:
         - name: Checkout Repository
           uses: actions/checkout@v4
 
-        - name: Setup NodeJS Version
+        - name: Setup NodeJS Version - matrix.nodejs_version
           uses: actions/setup-node@v4
           with:
-            node-version: 20
-    
-        - name: Install Dependencies
-          run: npm install
+            node-version: ${{ matrix.nodejs_version }}
+
+        - name: Cache NPM dependencies
+          uses: actions/cache@v4
+          with:
+            path: ~/.npm
+            key: v3-${{ runner.os }}-node-${{ matrix.nodejs_version }}-npm-${{ hashFiles('package-lock.json') }}
+
+        - name: Install NPM Dependencies
+          uses: ./.github/custom-actions/npm-actions
+          with:
+            path: .
+
+        - name: Seed Non-Production Database
+          run: node scripts/seed-test-db.js
     
         - name: Unit Testing
           run: npm test
           
         - name: Archive Test Result
+          if: always()
           uses: actions/upload-artifact@v4
           with:
-            name: Mocha-Test-Result
+            name: Mocha-Test-Result-Node-${{ matrix.nodejs_version }}
             path: test-results.xml
+
+    code-coverage:
+        name: Code Coverage
+        container:
+          image: node:18
+        runs-on: ubuntu-latest
+        services:
+          mongodb:
+            image: mongo:5.0
+            env:
+              MONGO_INITDB_ROOT_USERNAME: ci-user
+              MONGO_INITDB_ROOT_PASSWORD: ci-password
+            
+            options: >-
+              --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\")'"
+              --health-interval 10s
+              --health-timeout 5s
+              --health-retries 5
+        env:
+          MONGO_URI: mongodb://mongodb:27017/superData?authSource=admin
+          MONGO_USERNAME: ci-user
+          MONGO_PASSWORD: ci-password
+        steps:
+        - name: Checkout Repository
+          uses: actions/checkout@v4
+
+        #- name: Setup NodeJS Version - 18
+        #  uses: actions/setup-node@v4
+        #  with:
+         #   node-version: 18
+
+        - name: Cache NPM dependencies
+          uses: actions/cache@v4
+          with:
+            path: ~/.npm
+            key: v3-${{ runner.os }}-node-18-npm-${{ hashFiles('package-lock.json') }}
+
+        - name: Install NPM Dependencies
+          uses: ./.github/custom-actions/npm-actions
+          with:
+            path: .
+
+        - name: Seed Non-Production Database
+          run: node scripts/seed-test-db.js
+
+        - name: Check Code Coverage
+          id: code-coverage-check
+          continue-on-error: true
+          run: npm run coverage
+
+        - name: Archive Coverage Report
+          if: always()
+          uses: actions/upload-artifact@v4
+          with:
+            name: Code-Coverage-Result
+            path: coverage
+            retention-days: 5
+
+    reports:
+        needs: [code-coverage, unit-testing]
+        name: Collect and Upload Reports
+        runs-on: ubuntu-latest
+        continue-on-error: true
+        steps:
+          - name: Download Mocha Test Artifact (Node 18)
+            uses: actions/download-artifact@v4
+            with:
+              name: Mocha-Test-Result-Node-18
+              path: mocha-node-18
+
+          - name: Download Mocha Test Artifact (Node 20)
+            uses: actions/download-artifact@v4
+            with:
+              name: Mocha-Test-Result-Node-20
+              path: mocha-node-20
+
+          - name: Download Code Coverage Artifact
+            uses: actions/download-artifact@v4
+            with:
+              name: Code-Coverage-Result
+              path: coverage-report
+
+          - name: Merge Test Files
+            run: |
+              ls -ltr
+              mkdir -p "reports-${GITHUB_SHA}"
+              cp mocha-node-18/test-results.xml "reports-${GITHUB_SHA}/test-results-node-18.xml"
+              cp mocha-node-20/test-results.xml "reports-${GITHUB_SHA}/test-results-node-20.xml"
+              cp coverage-report/cobertura-coverage.xml "reports-${GITHUB_SHA}/"
+              ls -ltr "reports-${GITHUB_SHA}"
+
+          - name: Upload Combined Reports
+            uses: actions/upload-artifact@v4
+            with:
+              name: Combined-Test-and-Coverage-Reports
+              path: reports-${{ github.sha }}
+              retention-days: 5
+
+    docker:
+        name: Containerization
+        needs: [unit-testing, code-coverage]
+        permissions:
+          contents: read
+          packages: write
+        runs-on: ubuntu-latest
+        services:
+          mongodb:
+            image: mongo:5.0
+            env:
+              MONGO_INITDB_ROOT_USERNAME: ci-user
+              MONGO_INITDB_ROOT_PASSWORD: ci-password
+            ports:
+              - 27017:27017
+            options: >-
+              --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\")'"
+              --health-interval 10s
+              --health-timeout 5s
+              --health-retries 5
+        env:
+          MONGO_URI: mongodb://localhost:27017/superData?authSource=admin
+          MONGO_USERNAME: ci-user
+          MONGO_PASSWORD: ci-password
+          DOCKER_IMAGE: ${{ vars.DOCKERHUB_USERNAME }}/solar-system:${{ github.sha }}
+        steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+
+        - name: Setup NodeJS
+          uses: actions/setup-node@v4
+          with:
+            node-version: 18
+
+        - name: Install Dependencies
+          run: npm install
+
+        - name: Seed Non-Production Database
+          run: node scripts/seed-test-db.js
+
+        - name: Build, test, and publish Docker images
+          uses: ./.github/custom-actions/docker-actions
+          with:
+            dockerhub_image: ${{ env.DOCKER_IMAGE }}
+            ghcr_image: ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha }}
+            dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
+            dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+            ghcr_username: ${{ github.repository_owner }}
+            ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+            mongo_username: ${{ env.MONGO_USERNAME }}
+            mongo_password: ${{ env.MONGO_PASSWORD }}
+
+    dev-deploy:
+        if: contains(github.ref, 'refs/heads/feature/')
+        name: Development Deployment
+        needs: docker
+        permissions:
+          contents: read
+          packages: read
+        uses: ./.github/workflows/reuse-deployment.yml
+        with:
+          environment_name: development
+          image: ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha }}
+          manifests_path: kubernetes/development
+          ingress_host: solar-system-{namespace}.127.0.0.1.nip.io
+        secrets:
+          MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
+          ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+
+    prod-deploy:
+        if: github.ref == 'refs/heads/main'
+        name: Production Deployment
+        needs: docker
+        permissions:
+          contents: read
+          packages: read
+        uses: ./.github/workflows/reuse-deployment.yml
+        with:
+          environment_name: production
+          image: ghcr.io/${{ github.repository_owner }}/solar-system:${{ github.sha }}
+          manifests_path: kubernetes/production
+          ingress_host: solar-system.127.0.0.1.nip.io
+        secrets:
+          MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
+          ghcr_token: ${{ secrets.GITHUB_TOKEN }}
+
+    deployment-summary:
+        name: Deployment URL Summary
+        needs:
+          - dev-deploy
+          - prod-deploy
+        if: always() && (needs.dev-deploy.result == 'success' || needs.prod-deploy.result == 'success')
+        runs-on: ubuntu-latest
+        env:
+          DEV_INGRESS_URL: ${{ needs.dev-deploy.outputs.app_ingress_url }}
+          PROD_INGRESS_URL: ${{ needs.prod-deploy.outputs.app_ingress_url }}
+        steps:
+          - name: Add Deployment URLs to Summary
+            run: |
+              if [[ -n "$DEV_INGRESS_URL" ]]; then
+                echo "Development ingress URL tested during deployment: $DEV_INGRESS_URL (temporary; the kind cluster ended with the deployment job)." >> "$GITHUB_STEP_SUMMARY"
+              fi
+              if [[ -n "$PROD_INGRESS_URL" ]]; then
+                echo "Production ingress URL tested during deployment: $PROD_INGRESS_URL (temporary; the kind cluster ended with the deployment job)." >> "$GITHUB_STEP_SUMMARY"
+              fi

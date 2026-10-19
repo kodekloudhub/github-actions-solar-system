@@ -1,0 +1,226 @@
+name: Reusable Kubernetes Deployment
+
+on:
+  workflow_call:
+    inputs:
+      environment_name:
+        description: GitHub environment to deploy to
+        required: true
+        type: string
+      image:
+        description: Fully qualified app image
+        required: true
+        type: string
+      manifests_path:
+        description: Directory containing the Kubernetes manifests
+        required: true
+        type: string
+      ingress_host:
+        description: Hostname used to reach the ingress during this run
+        required: true
+        type: string
+    secrets:
+      MONGO_PASSWORD:
+        description: MongoDB password for the deployment
+        required: true
+      ghcr_token:
+        required: true
+    outputs:
+      app_ingress_url:
+        description: Temporary ingress URL for the deployment
+        value: ${{ jobs.reuse-deploy.outputs.app_ingress_url }}
+
+jobs:
+  reuse-deploy:
+    name: Deploy to ${{ inputs.environment_name }} (Temporary kind)
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment_name }}
+      url: ${{ steps.test-ingress.outputs.app_ingress_url }}
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      app_ingress_url: ${{ steps.test-ingress.outputs.app_ingress_url }}
+    env:
+      DOCKER_IMAGE: ${{ inputs.image }}
+      NAMESPACE: ${{ vars.NAMESPACE }}
+      REPLICAS: ${{ vars.REPLICAS }}
+      MONGO_URI: mongodb://mongodb:27017/superData?authSource=admin
+      MONGO_USERNAME: ${{ vars.MONGO_USERNAME }}
+      MONGO_PASSWORD: ${{ secrets.MONGO_PASSWORD }}
+      MANIFESTS_PATH: ${{ inputs.manifests_path }}
+      INGRESS_HOST: ${{ inputs.ingress_host }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Validate Deployment Inputs
+        run: |
+          if [[ ! "$NAMESPACE" =~ ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$ ]]; then
+            echo "NAMESPACE must be set to a valid Kubernetes namespace in the ${{ inputs.environment_name }} environment."
+            exit 1
+          fi
+          if [[ ! "$REPLICAS" =~ ^[1-9][0-9]*$ ]]; then
+            echo "REPLICAS must be set to a positive integer in the ${{ inputs.environment_name }} environment."
+            exit 1
+          fi
+          if [[ -z "$MONGO_USERNAME" ]]; then
+            echo "MONGO_USERNAME is missing. Define it as an environment variable in the ${{ inputs.environment_name }} environment."
+            exit 1
+          fi
+          if [[ -z "$MONGO_PASSWORD" ]]; then
+            echo "MONGO_PASSWORD is missing. Define it as an environment secret in the ${{ inputs.environment_name }} environment."
+            exit 1
+          fi
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.ghcr_token }}
+
+      - name: Pull Application Image
+        run: docker pull "$DOCKER_IMAGE"
+
+      - name: Create Temporary Kubernetes Cluster
+        uses: helm/kind-action@v1.10.0
+        with:
+          cluster_name: kind
+          config: .github/kind-config.yaml
+
+      - name: Install kubectl CLI
+        uses: azure/setup-kubectl@v3
+        with:
+          version: v1.30.0
+
+      - name: Check Kubernetes Cluster
+        run: |
+          kubectl version --client
+          kubectl get nodes
+
+      - name: Install NGINX Ingress Controller
+        run: |
+          kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.2/deploy/static/provider/kind/deploy.yaml
+          kubectl wait --namespace ingress-nginx \
+            --for=condition=Ready pod \
+            --selector=app.kubernetes.io/component=controller \
+            --timeout=180s || {
+              kubectl get pods --namespace ingress-nginx -o wide
+              kubectl describe pods --namespace ingress-nginx
+              kubectl logs --namespace ingress-nginx \
+                --selector=app.kubernetes.io/component=controller \
+                --all-containers=true --tail=100 || true
+              exit 1
+            }
+
+      - name: Load Application Image into kind
+        run: kind load docker-image "$DOCKER_IMAGE"
+
+      - name: Set Temporary Ingress Address
+        run: echo "INGRESS_IP=127.0.0.1" >> "$GITHUB_ENV"
+
+      - name: Replace Tokens in Deployment Manifests
+        uses: cschleiden/replace-tokens@v1
+        with:
+          tokenPrefix: '_{_'
+          tokenSuffix: '_}_'
+          files: '["${{ inputs.manifests_path }}/*.yaml"]'
+        env:
+          NAMESPACE: ${{ env.NAMESPACE }}
+          REPLICAS: ${{ env.REPLICAS }}
+          IMAGE: ${{ env.DOCKER_IMAGE }}
+          INGRESS_IP: ${{ env.INGRESS_IP }}
+
+      - name: Check Rendered Manifests
+        run: cat "$MANIFESTS_PATH"/*.yaml
+
+      - name: Create Namespace and Temporary MongoDB
+        run: |
+          kubectl create namespace "$NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create deployment mongodb \
+            --namespace "$NAMESPACE" \
+            --image=mongo:5.0 \
+            --dry-run=client -o yaml | kubectl apply -f -
+          kubectl set env deployment/mongodb \
+            --namespace "$NAMESPACE" \
+            "MONGO_INITDB_ROOT_USERNAME=$MONGO_USERNAME" \
+            "MONGO_INITDB_ROOT_PASSWORD=$MONGO_PASSWORD"
+          kubectl expose deployment mongodb \
+            --namespace "$NAMESPACE" \
+            --port=27017 --target-port=27017 \
+            --dry-run=client -o yaml | kubectl apply -f -
+          kubectl rollout status deployment/mongodb --namespace "$NAMESPACE" --timeout=120s
+
+          mongo_ready=false
+          for attempt in $(seq 1 30); do
+            if kubectl exec deployment/mongodb --namespace "$NAMESPACE" -- \
+              mongosh --quiet --username "$MONGO_USERNAME" --password "$MONGO_PASSWORD" \
+              --authenticationDatabase admin superData --eval 'db.adminCommand("ping")' >/dev/null 2>&1; then
+              mongo_ready=true
+              break
+            fi
+            sleep 2
+          done
+          if [ "$mongo_ready" != true ]; then
+            echo "MongoDB did not become ready"
+            exit 1
+          fi
+          kubectl exec deployment/mongodb --namespace "$NAMESPACE" -- \
+            mongosh --quiet --username "$MONGO_USERNAME" --password "$MONGO_PASSWORD" \
+            --authenticationDatabase admin superData --eval \
+            'db.planets.insertMany([{id:1,name:"Mercury"},{id:2,name:"Venus"},{id:3,name:"Earth"},{id:4,name:"Mars"},{id:5,name:"Jupiter"},{id:6,name:"Saturn"},{id:7,name:"Uranus"},{id:8,name:"Neptune"}])'
+
+      - name: Create MongoDB Secret
+        run: |
+          kubectl -n "$NAMESPACE" create secret generic mongo-db-creds \
+            --from-literal="MONGO_URI=$MONGO_URI" \
+            --from-literal="MONGO_USERNAME=$MONGO_USERNAME" \
+            --from-literal="MONGO_PASSWORD=$MONGO_PASSWORD" \
+            --save-config --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy Manifests
+        run: |
+          kubectl apply -f "$MANIFESTS_PATH/"
+          kubectl rollout status deployment/solar-system \
+            --namespace "$NAMESPACE" --timeout=120s
+
+      - name: Show Deployment Status
+        run: kubectl get deployments,pods,services,ingresses --namespace "$NAMESPACE"
+
+      - name: Test Kubernetes Deployment
+        id: test-ingress
+        run: |
+          kubectl port-forward --namespace ingress-nginx \
+            service/ingress-nginx-controller 8443:443 \
+            > /tmp/solar-system-port-forward.log 2>&1 &
+          for attempt in $(seq 1 30); do
+            host="${INGRESS_HOST//\{namespace\}/$NAMESPACE}"
+            if curl --silent --show-error --insecure \
+              --header "Host: $host" \
+              --output /tmp/solar-system-response.json \
+              --write-out '%{http_code}' \
+              https://127.0.0.1:8443/live > /tmp/solar-system-http-status.txt; then
+              status=$(cat /tmp/solar-system-http-status.txt)
+              if [[ "$status" == "200" ]] && grep -q '"status":"live"' /tmp/solar-system-response.json; then
+                app_ingress_url="https://${host}"
+                echo "app_ingress_url=$app_ingress_url" >> "$GITHUB_OUTPUT"
+                echo "Temporary app ingress URL: $app_ingress_url" >> "$GITHUB_STEP_SUMMARY"
+                cat /tmp/solar-system-response.json
+                exit 0
+              fi
+            fi
+            sleep 2
+          done
+          echo "Ingress health check failed"
+          echo "HTTP status: $(cat /tmp/solar-system-http-status.txt 2>/dev/null || echo unavailable)"
+          cat /tmp/solar-system-response.json 2>/dev/null || true
+          kubectl describe ingress solar-system --namespace "$NAMESPACE" || true
+          kubectl get endpoints,services --namespace "$NAMESPACE" || true
+          kubectl logs --namespace ingress-nginx \
+            --selector=app.kubernetes.io/component=controller \
+            --all-containers=true --tail=100 || true
+          cat /tmp/solar-system-port-forward.log
+          kubectl get pods,services --namespace "$NAMESPACE"
+          exit 1
